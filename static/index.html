@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        textarea {
+            width: 100%;
+            min-height: 3.5em;
+            display: block;
+        }
+
+        button {
+            display: block;
+        }
+
+        video {
+            display: block;
+        }
+
+        h3 {
+            margin-bottom: 0;
+        }
+
+    </style>
+</head>
+<body>
+<div class="analyzer">
+    Video size: <span id="video-size"></span><br>
+    Keyframe count: <span id="keyframe-count"></span><br>
+    Interframe count: <span id="interframe-count"></span><br>
+    Last keyframe size: <span id="keyframe-size"></span><br>
+    Last interframe size: <span id="interframe-size"></span><br>
+    Duplicate count: <span id="duplicate-count"></span><br>
+</div>
+
+<button onclick="window.startSession()">Start Session</button>
+<button onclick="window.sendSignal()">Start Session</button>
+
+<h3>Video</h3>
+<div id="remoteVideos">
+    <video id="video" autoplay></video>
+</div>
+
+<div id="bitrate"></div>
+<div id="peer"></div>
+<div id="receiverStats"></div>
+
+<h3>Logs</h3>
+<div id="logs"></div>
+
+
+<script>
+    /* eslint-env browser */
+    const keyFrameCountDisplay = document.querySelector('#keyframe-count');
+    const keyFrameSizeDisplay = document.querySelector('#keyframe-size');
+    const interFrameCountDisplay = document.querySelector('#interframe-count');
+    const interFrameSizeDisplay = document.querySelector('#interframe-size');
+    const videoSizeDisplay = document.querySelector('#video-size');
+    const duplicateCountDisplay = document.querySelector('#duplicate-count');
+    const videoEl = document.querySelector('#video');
+    let keyFrameCount = 0;
+    let interFrameCount = 0;
+    let keyFrameLastSize = 0;
+    let interFrameLastSize = 0;
+    let duplicateCount = 0;
+    let prevFrameType;
+    let prevFrameTimestamp;
+    let prevFrameSynchronizationSource;
+
+    let sendChannel;
+
+    function videoAnalyzer(encodedFrame, controller) {
+        const view = new DataView(encodedFrame.data);
+        // We assume that the video is VP8.
+        // TODO: Check the codec to see that it is.
+        // The lowest value bit in the first byte is the keyframe indicator.
+        // https://tools.ietf.org/html/rfc6386#section-9.1
+        const keyframeBit = view.getUint8(0) & 0x01;
+        // console.log(view.getUint8(0).toString(16));
+        if (keyframeBit === 0) {
+            keyFrameCount++;
+            keyFrameLastSize = encodedFrame.data.byteLength;
+        } else {
+            interFrameCount++;
+            interFrameLastSize = encodedFrame.data.byteLength;
+        }
+        if (encodedFrame.type === prevFrameType &&
+            encodedFrame.timestamp === prevFrameTimestamp &&
+            encodedFrame.synchronizationSource === prevFrameSynchronizationSource) {
+            duplicateCount++;
+        }
+        prevFrameType = encodedFrame.type;
+        prevFrameTimestamp = encodedFrame.timestamp;
+        prevFrameSynchronizationSource = encodedFrame.synchronizationSource;
+        controller.enqueue(encodedFrame);
+    }
+
+    // Update the display of the counters once a second.
+    setInterval(() => {
+        keyFrameCountDisplay.innerText = keyFrameCount;
+        keyFrameSizeDisplay.innerText = keyFrameLastSize;
+        interFrameCountDisplay.innerText = interFrameCount;
+        interFrameSizeDisplay.innerText = interFrameLastSize;
+        duplicateCountDisplay.innerText = duplicateCount;
+    }, 1000);
+
+    setInterval(async () => {
+        if (!pc) {
+            return;
+        }
+
+        const stats = await pc.getStats()
+        showRemoteStats(stats)
+    }, 1000);
+
+    let bytesPrev;
+    let timestampPrev;
+
+    function dumpStats(results) {
+        let statsString = '';
+        results.forEach(res => {
+            statsString += '<h3>Report type=';
+            statsString += res.type;
+            statsString += '</h3>\n';
+            statsString += `id ${res.id}<br>`;
+            statsString += `time ${res.timestamp}<br>`;
+            Object.keys(res).forEach(k => {
+                if (k !== 'timestamp' && k !== 'type' && k !== 'id') {
+                    if (typeof res[k] === 'object') {
+                        statsString += `${k}: ${JSON.stringify(res[k])}<br>`;
+                    } else {
+                        statsString += `${k}: ${res[k]}<br>`;
+                    }
+                }
+            });
+        });
+        return statsString;
+    }
+
+    const receiverStatsDiv = document.querySelector('div#receiverStats');
+    const bitrateDiv = document.querySelector('div#bitrate');
+    const peerDiv = document.querySelector('div#peer');
+
+    function showRemoteStats(results) {
+        const statsString = dumpStats(results);
+        receiverStatsDiv.innerHTML = `<h2>Receiver stats</h2>${statsString}`;
+        // calculate video bitrate
+        results.forEach(report => {
+            const now = report.timestamp;
+
+            let bitrate;
+            if (report.type === 'inbound-rtp' && report.mediaType === 'video') {
+                const bytes = report.bytesReceived;
+                if (timestampPrev) {
+                    bitrate = 8 * (bytes - bytesPrev) / (now - timestampPrev);
+                    bitrate = Math.floor(bitrate);
+                }
+                bytesPrev = bytes;
+                timestampPrev = now;
+            }
+            if (bitrate) {
+                bitrate += ' kbits/sec';
+                bitrateDiv.innerHTML = `<strong>Bitrate:</strong>${bitrate}`;
+            }
+        });
+
+        // figure out the peer's ip
+        let activeCandidatePair = null;
+        let remoteCandidate = null;
+
+        // Search for the candidate pair, spec-way first.
+        results.forEach(report => {
+            if (report.type === 'transport') {
+                activeCandidatePair = results.get(report.selectedCandidatePairId);
+            }
+        });
+        // Fallback for Firefox.
+        if (!activeCandidatePair) {
+            results.forEach(report => {
+                if (report.type === 'candidate-pair' && report.selected) {
+                    activeCandidatePair = report;
+                }
+            });
+        }
+        if (activeCandidatePair && activeCandidatePair.remoteCandidateId) {
+            remoteCandidate = results.get(activeCandidatePair.remoteCandidateId);
+        }
+        if (remoteCandidate) {
+            if (remoteCandidate.address && remoteCandidate.port) {
+                peerDiv.innerHTML = `<strong>Connected to:</strong>${remoteCandidate.address}:${remoteCandidate.port}`;
+            } else if (remoteCandidate.ip && remoteCandidate.port) {
+                peerDiv.innerHTML = `<strong>Connected to:</strong>${remoteCandidate.ip}:${remoteCandidate.port}`;
+            } else if (remoteCandidate.ipAddress && remoteCandidate.portNumber) {
+                // Fall back to old names.
+                peerDiv.innerHTML = `<strong>Connected to:</strong>${remoteCandidate.ipAddress}:${remoteCandidate.portNumber}`;
+            }
+        }
+    }
+
+    const pc = new RTCPeerConnection({
+        iceServers: [{
+            urls: 'stun:stun.l.google.com:19302'
+        }],
+        encodedInsertableStreams: true,
+    })
+    const log = msg => {
+        document.getElementById('logs').innerHTML += msg + '<br>'
+    }
+
+    pc.ontrack = event => {
+        console.log(event)
+
+        const frameStreams = event.receiver.createEncodedStreams();
+        frameStreams.readable.pipeThrough(new TransformStream({
+            transform: videoAnalyzer
+        }))
+            .pipeTo(frameStreams.writable);
+
+        // console.log(event)
+        // const videoTrack = event.streams[0].getVideoTracks()[0];
+        // const trackProcessor = new MediaStreamTrackProcessor({track: videoTrack});
+        // const trackGenerator = new MediaStreamTrackGenerator({kind: "video"});
+        //
+        // const transformer = new TransformStream({
+        //     async transform(videoFrame, controller) {
+        //         console.log(videoFrame);
+        //         controller.enqueue(videoFrame);
+        //     },
+        // });
+        //
+        // trackProcessor.readable
+        //     .pipeThrough(transformer)
+        //     .pipeTo(trackGenerator.writable);
+
+        // el.srcObject = new MediaStream([trackGenerator]);
+        videoEl.srcObject = event.streams[0]
+
+        // const track = event.track
+        // setInterval(() => {
+        //     console.log(track.getCapabilities())
+        // }, 5000)
+    }
+
+    videoEl.addEventListener('mousemove', (event) => {
+        if (!sendChannel) {
+            return;
+        }
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const data = new Uint32Array(3);
+        data[0] = 0
+        data[1] = x
+        data[2] = y
+        sendChannel.send(data)
+    })
+
+    videoEl.addEventListener('click', (event) => {
+        if (!sendChannel) {
+            return;
+        }
+
+        const data = new Uint32Array(3);
+        data[0] = 1;
+        sendChannel.send(data)
+    })
+
+    videoEl.addEventListener('wheel', (event) => {
+        if (!sendChannel) {
+            return;
+        }
+
+        event.preventDefault()
+        const data = new Int32Array(3);
+        data[0] = 2
+        data[1] = event.deltaX
+        data[2] = event.deltaY
+        sendChannel.send(data)
+    })
+
+    pc.oniceconnectionstatechange = e => log(pc.iceConnectionState)
+
+    // Offer to receive 1 video track
+    pc.addTransceiver('video', {
+        'direction': 'recvonly'
+    })
+
+    window.startSession = async () => {
+        sendChannel = pc.createDataChannel('sendDataChannel');
+        sendChannel.onopen = () => console.log('sendChannel.onopen');
+        sendChannel.onmessage = () => console.log('sendChannel.onmessage');
+        sendChannel.onclose = () => console.log('sendChannel.onclose');
+
+        const offer = await pc.createOffer()
+        await pc.setLocalDescription(offer)
+
+        const res = await fetch('rtcOffer', {
+            method: 'POST',
+            body: btoa(JSON.stringify(pc.localDescription)),
+        })
+
+        const resText = await res.text()
+        try {
+            await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(resText))))
+        } catch (e) {
+            alert(e)
+        }
+    }
+
+    let signal = true;
+    window.sendSignal = () => {
+        if (!sendChannel) {
+            return;
+        }
+
+        const data = new Uint8Array(1);
+        data[0] = signal
+        sendChannel.send(data)
+        signal = !signal
+    }
+
+    let rafID = null;
+
+    window.addEventListener("gamepadconnected", event => {
+        if (!rafID) {
+            pollGamepad();
+        }
+    });
+
+    const pollGamepad = () => {
+        const gamepads = navigator.getGamepads();
+        for (const gamepad of gamepads) {
+            if (!gamepad) {
+                continue;
+            }
+
+            // if (!sendChannel) {
+            //     continue;
+            // }
+
+            const buffer = new ArrayBuffer(20)
+
+            let buttons = 0
+            gamepad.buttons.forEach((button, index) => {
+                buttons = buttons | (button.pressed << index)
+            });
+
+            const buttonsData = new Uint32Array(buffer, 16, 1)
+            buttonsData[0] = buttons
+
+            const axes = new Float32Array(buffer, 0, 4)
+            gamepad.axes.forEach((axe, index) => {
+                axes[index] = axe
+            });
+
+            console.log(buffer)
+            sendChannel.send(buffer)
+        }
+        rafID = window.requestAnimationFrame(pollGamepad);
+    };
+
+</script>
+</body>
+</html>

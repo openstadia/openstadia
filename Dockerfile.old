@@ -1,0 +1,23 @@
+FROM golang:1.20-bullseye AS build-stage
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+RUN apt-get update
+RUN apt-get install -y libx11-dev libxext-dev libvpx-dev
+
+COPY . .
+
+RUN go build -o /screen
+
+FROM x11docker/xfce
+
+WORKDIR /app
+
+RUN apt-get update
+RUN apt-get install -y libx11-dev libxext-dev libvpx-dev
+
+COPY --from=build-stage /screen /app/screen
+COPY static /app/static
