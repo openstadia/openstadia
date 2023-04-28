@@ -18,11 +18,15 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"time"
 )
 
 //sudo apt-get install libx11-dev libxext-dev libvpx-dev
+//https://github.com/intel/media-driver
 
 var pGamepad *uinput.Gamepad
+var pTrack *mediadevices.VideoTrack
 
 func Mark(show *bool) video.TransformFunc {
 	return func(r video.Reader) video.Reader {
@@ -59,6 +63,16 @@ func Mark(show *bool) video.TransformFunc {
 }
 
 func rtcOffer(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(404)
+		return
+	}
+
+	if pTrack != nil {
+		w.WriteHeader(404)
+		return
+	}
+
 	config := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
@@ -90,6 +104,28 @@ func rtcOffer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	xvfb := NewXvfb(99, "-screen 0 640x480x24")
+	xvfb.Start()
+
+	time.Sleep(time.Second * 10)
+	fmt.Printf("Display: %s\n", os.Getenv("DISPLAY"))
+
+	peerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
+		fmt.Printf("Connection State has changed %s \n", state.String())
+		if state == webrtc.PeerConnectionStateDisconnected {
+			if closeErr := peerConnection.Close(); closeErr != nil {
+				fmt.Println(closeErr)
+			}
+		} else if state == webrtc.PeerConnectionStateClosed {
+			closeErr := pTrack.Close()
+			if closeErr != nil {
+				panic(closeErr)
+			}
+			xvfb.Stop()
+			pTrack = nil
+		}
+	})
 
 	// Set the handler for ICE connection state
 	// This will notify you when the peer has connected/disconnected
@@ -152,30 +188,27 @@ func rtcOffer(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	for _, track := range s.GetVideoTracks() {
-		//videoTrack := track.(mediadevices.VideoTrack)
-		fmt.Printf("Track (ID: %s) %+v %T\n", track.ID(), track, track)
+	track := s.GetVideoTracks()[0]
+	switch v := track.(type) {
+	case *mediadevices.VideoTrack:
+		v.Transform(mark)
+		pTrack = v
+	default:
+		fmt.Printf("unexpected type %T\n", v)
+	}
 
-		switch v := track.(type) {
-		case *mediadevices.VideoTrack:
-			v.Transform(mark)
-		default:
-			fmt.Printf("unexpected type %T\n", v)
-		}
+	track.OnEnded(func(err error) {
+		fmt.Printf("Track (ID: %s) ended with error: %v\n",
+			track.ID(), err)
+	})
 
-		track.OnEnded(func(err error) {
-			fmt.Printf("Track (ID: %s) ended with error: %v\n",
-				track.ID(), err)
-		})
-
-		_, err = peerConnection.AddTransceiverFromTrack(track,
-			webrtc.RTPTransceiverInit{
-				Direction: webrtc.RTPTransceiverDirectionSendonly,
-			},
-		)
-		if err != nil {
-			panic(err)
-		}
+	_, err = peerConnection.AddTransceiverFromTrack(track,
+		webrtc.RTPTransceiverInit{
+			Direction: webrtc.RTPTransceiverDirectionSendonly,
+		},
+	)
+	if err != nil {
+		panic(err)
 	}
 
 	// Set the remote SessionDescription
@@ -214,22 +247,25 @@ func rtcOffer(w http.ResponseWriter, r *http.Request) {
 func main() {
 	robotgo.MouseSleep = 0
 
-	gamepad, err := uinput.CreateGamepad("/dev/uinput", []byte("testpad"), 0x045E, 0x02EA)
-	if err != nil {
-		panic(err)
-	}
-	defer func(gamepad uinput.Gamepad) {
-		err := gamepad.Close()
+	remoteGamepad := true
+	if remoteGamepad {
+		gamepad, err := uinput.CreateGamepad("/dev/uinput", []byte("Microsoft X-Box One S pad"), 0x045E, 0x02EA)
 		if err != nil {
 			panic(err)
 		}
-	}(gamepad)
-	pGamepad = &gamepad
+		defer func(gamepad uinput.Gamepad) {
+			err := gamepad.Close()
+			if err != nil {
+				panic(err)
+			}
+		}(gamepad)
+		pGamepad = &gamepad
+	}
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
 	http.HandleFunc("/rtcOffer", rtcOffer)
-	err = http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -302,6 +302,10 @@
             body: btoa(JSON.stringify(pc.localDescription)),
         })
 
+        if (!res.ok) {
+            return
+        }
+
         const resText = await res.text()
         try {
             await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(resText))))

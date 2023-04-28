@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"github.com/bendahl/uinput"
 	"math"
 )
@@ -24,12 +23,14 @@ var buttonsMap = map[int]int{
 	10: 0x13d,
 	11: 0x13e,
 
-	12: uinput.ButtonDpadUp,
-	13: uinput.ButtonDpadDown,
-	14: uinput.ButtonDpadLeft,
-	15: uinput.ButtonDpadRight,
-
 	16: uinput.ButtonMode,
+}
+
+var hatMap = map[int]uinput.HatDirection{
+	12: uinput.HatUp,
+	13: uinput.HatDown,
+	14: uinput.HatLeft,
+	15: uinput.HatRight,
 }
 
 func parseGamepadData(gamepad uinput.Gamepad, data []byte) {
@@ -44,8 +45,6 @@ func parseGamepadData(gamepad uinput.Gamepad, data []byte) {
 		buttons[i] = (buttonsData & (1 << i)) != 0
 	}
 
-	//fmt.Printf("%+v %+v", axes, buttons)
-
 	err := gamepad.LeftStickMove(axes[0], axes[1])
 	if err != nil {
 		panic(err)
@@ -56,19 +55,48 @@ func parseGamepadData(gamepad uinput.Gamepad, data []byte) {
 		panic(err)
 	}
 
-	for i := 0; i < 17; i++ {
-		key := buttonsMap[i]
-		if buttons[i] {
-			fmt.Printf("%d\n", i)
-			err := gamepad.ButtonDown(key)
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			err := gamepad.ButtonUp(key)
-			if err != nil {
-				panic(err)
-			}
+	for i := 0; i < 12; i++ {
+		pressButton(gamepad, i, buttons)
+	}
+	pressButton(gamepad, 16, buttons)
+
+	pressHat(gamepad, 12, 13, buttons)
+	pressHat(gamepad, 14, 15, buttons)
+}
+
+func pressHat(gamepad uinput.Gamepad, neg, pos int, buttons [17]bool) {
+	if buttons[neg] {
+		posHat := hatMap[neg]
+		err := gamepad.HatPress(posHat)
+		if err != nil {
+			panic(err)
+		}
+	} else if buttons[pos] {
+		negHat := hatMap[pos]
+		err := gamepad.HatPress(negHat)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		anyHat := hatMap[neg]
+		err := gamepad.HatRelease(anyHat)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func pressButton(gamepad uinput.Gamepad, index int, buttons [17]bool) {
+	key := buttonsMap[index]
+	if buttons[index] {
+		err := gamepad.ButtonDown(key)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		err := gamepad.ButtonUp(key)
+		if err != nil {
+			panic(err)
 		}
 	}
 }
