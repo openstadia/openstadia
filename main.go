@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/bendahl/uinput"
 	"github.com/go-vgo/robotgo"
 	"github.com/openstadia/openstadia/signal"
+	"github.com/openstadia/openstadia/uinput"
 	"github.com/pion/mediadevices"
 	"github.com/pion/mediadevices/pkg/codec/vpx"
 	_ "github.com/pion/mediadevices/pkg/driver/screen"
@@ -23,6 +23,13 @@ import (
 )
 
 //sudo apt-get install libx11-dev libxext-dev libvpx-dev
+
+//x11
+//sudo apt install libx11-dev xorg-dev libxtst-dev
+
+//Hook
+//sudo apt install xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev libxkbcommon-dev
+
 //https://github.com/intel/media-driver
 
 var pGamepad *uinput.Gamepad
@@ -108,7 +115,7 @@ func rtcOffer(w http.ResponseWriter, r *http.Request) {
 	xvfb := NewXvfb(99, "-screen 0 640x480x24")
 	xvfb.Start()
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 5)
 	fmt.Printf("Display: %s\n", os.Getenv("DISPLAY"))
 
 	peerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
@@ -249,7 +256,7 @@ func main() {
 
 	remoteGamepad := true
 	if remoteGamepad {
-		gamepad, err := uinput.CreateGamepad("/dev/uinput", []byte("Microsoft X-Box One S pad"), 0x045E, 0x02EA)
+		gamepad, err := uinput.CreateGamepad("/dev/uinput", []byte("Xbox One Wireless Controller"), 0x045E, 0x02EA)
 		if err != nil {
 			panic(err)
 		}

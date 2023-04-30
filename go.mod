@@ -3,11 +3,11 @@ module github.com/openstadia/openstadia
 go 1.20
 
 require (
-	github.com/bendahl/uinput v1.6.0
 	github.com/go-vgo/robotgo v0.100.10
 	github.com/pion/mediadevices v0.4.0
 	github.com/pion/webrtc/v3 v3.1.61
 	golang.org/x/image v0.7.0
+	golang.org/x/net v0.9.0
 )
 
 require (
@@ -46,6 +46,5 @@ require (
 	github.com/vcaesar/keycode v0.10.0 // indirect
 	github.com/vcaesar/tt v0.20.0 // indirect
 	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 )

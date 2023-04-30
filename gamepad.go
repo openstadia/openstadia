@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/binary"
-	"github.com/bendahl/uinput"
+	uinput "github.com/openstadia/openstadia/uinput"
 	"math"
 )
 
