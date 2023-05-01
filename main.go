@@ -7,7 +7,7 @@ import (
 	"github.com/openstadia/openstadia/signal"
 	"github.com/openstadia/openstadia/uinput"
 	"github.com/pion/mediadevices"
-	"github.com/pion/mediadevices/pkg/codec/vpx"
+	"github.com/pion/mediadevices/pkg/codec/x264"
 	_ "github.com/pion/mediadevices/pkg/driver/screen"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/io/video"
@@ -18,7 +18,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -94,7 +93,8 @@ func rtcOffer(w http.ResponseWriter, r *http.Request) {
 	bodyString := string(body)
 	signal.Decode(bodyString, &offer)
 
-	vp8params, err := vpx.NewVP8Params()
+	//vp8params, err := vpx.NewVP8Params()
+	vp8params, err := x264.NewParams()
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +116,9 @@ func rtcOffer(w http.ResponseWriter, r *http.Request) {
 	xvfb.Start()
 
 	time.Sleep(time.Second * 5)
-	fmt.Printf("Display: %s\n", os.Getenv("DISPLAY"))
+
+	ppsspp := NewPpsspp(99)
+	ppsspp.Start()
 
 	peerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		fmt.Printf("Connection State has changed %s \n", state.String())
@@ -130,6 +132,7 @@ func rtcOffer(w http.ResponseWriter, r *http.Request) {
 				panic(closeErr)
 			}
 			xvfb.Stop()
+			ppsspp.Stop()
 			pTrack = nil
 		}
 	})

@@ -6,34 +6,31 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"syscall"
 	"time"
 )
 
-type Xvfb interface {
+type Ppsspp interface {
 	Start()
 	Stop()
 }
 
-type xvfb struct {
+type ppsspp struct {
 	cmd        *exec.Cmd
 	display    string
 	displayNum uint
-	xvfbArgs   string
 	cancel     context.CancelFunc
 }
 
-func NewXvfb(displayNum uint, xvfbArgs string) Xvfb {
-	return &xvfb{
+func NewPpsspp(displayNum uint) Ppsspp {
+	return &ppsspp{
 		cmd:        nil,
 		display:    fmt.Sprintf(":%d", displayNum),
 		displayNum: displayNum,
-		xvfbArgs:   xvfbArgs,
 		cancel:     nil,
 	}
 }
 
-func (x *xvfb) Start() {
+func (x *ppsspp) Start() {
 	if x.cmd != nil {
 		return
 	}
@@ -46,7 +43,7 @@ func (x *xvfb) Start() {
 	}
 }
 
-func (x *xvfb) Stop() {
+func (x *ppsspp) Stop() {
 	if x.cmd == nil {
 		return
 	}
@@ -54,13 +51,13 @@ func (x *xvfb) Stop() {
 	x.cancel()
 }
 
-func (x *xvfb) isDisplayExists() bool {
+func (x *ppsspp) isDisplayExists() bool {
 	lockFile := x.getLockFile()
 	_, err := os.Stat(lockFile)
 	return err == nil
 }
 
-func (x *xvfb) setDisplayEnvVariable() {
+func (x *ppsspp) setDisplayEnvVariable() {
 	err := os.Setenv("DISPLAY", x.display)
 	if err != nil {
 		panic(err)
@@ -73,14 +70,15 @@ func (x *xvfb) setDisplayEnvVariable() {
 
 //640x480x24
 
-func (x *xvfb) spawnProcess() {
+func (x *ppsspp) spawnProcess() {
 	display := x.display
 	ctx, cancel := context.WithCancel(context.Background())
-	cmd := exec.CommandContext(ctx, "Xvfb", display, "-screen", "0", "960x544x24")
+	cmd := exec.CommandContext(ctx, "/home/user/ppsspp_build/PPSSPPSDL")
 	cmd.Cancel = func() error {
 		return cmd.Process.Signal(os.Interrupt)
 	}
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	cmd.Env = append(os.Environ(), "DISPLAY="+display)
 
 	x.cmd = cmd
 	x.cancel = cancel
@@ -100,6 +98,6 @@ func (x *xvfb) spawnProcess() {
 	}()
 }
 
-func (x *xvfb) getLockFile() string {
+func (x *ppsspp) getLockFile() string {
 	return fmt.Sprintf("/tmp/.X%d-lock", x.displayNum)
 }

@@ -199,22 +199,22 @@ func (vg vGamepad) sendHatEvent(direction HatDirection, action HatAction) error 
 	case HatUp:
 		{
 			event = absHat0Y
-			value = -1
+			value = -MaximumAxisValue
 		}
 	case HatDown:
 		{
 			event = absHat0Y
-			value = 1
+			value = MaximumAxisValue
 		}
 	case HatLeft:
 		{
 			event = absHat0X
-			value = -1
+			value = -MaximumAxisValue
 		}
 	case HatRight:
 		{
 			event = absHat0X
-			value = 1
+			value = MaximumAxisValue
 		}
 	default:
 		{
@@ -261,20 +261,14 @@ func createVGamepadDevice(path string, name []byte, vendor uint16, product uint1
 
 		ButtonBumperLeft,
 		ButtonBumperRight,
-		ButtonTriggerLeft,
-		ButtonTriggerRight,
-		ButtonThumbLeft,
-		ButtonThumbRight,
 
 		ButtonSelect,
 		ButtonStart,
 
-		ButtonDpadUp,    // * * *
-		ButtonDpadDown,  // * These buttons can be used instead of the hat events.
-		ButtonDpadLeft,  // *
-		ButtonDpadRight, // * * *
-
 		ButtonMode,
+
+		ButtonThumbLeft,
+		ButtonThumbRight,
 	}
 
 	// absEvents is for the absolute events for the gamepad device.
@@ -331,7 +325,7 @@ func createVGamepadDevice(path string, name []byte, vendor uint16, product uint1
 				Bustype: busUsb,
 				Vendor:  vendor,
 				Product: product,
-				Version: 1}})
+				Version: 0x301}})
 }
 
 // Takes in a normalized value (-1.0:1.0) and return an event value
