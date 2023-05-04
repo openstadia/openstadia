@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/go-vgo/robotgo v0.100.10
+	github.com/gorilla/websocket v1.5.0
 	github.com/pion/mediadevices v0.4.0
 	github.com/pion/webrtc/v3 v3.1.61
 	golang.org/x/image v0.7.0

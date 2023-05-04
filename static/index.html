@@ -39,7 +39,7 @@
 
 <h3>Video</h3>
 <div id="remoteVideos">
-    <video id="video" controls autoplay></video>
+    <video autoplay id="video"></video>
 </div>
 
 <div id="bitrate"></div>
@@ -297,9 +297,12 @@
         const offer = await pc.createOffer()
         await pc.setLocalDescription(offer)
 
-        const res = await fetch('rtcOffer', {
+        const res = await fetch('http://192.168.1.162:8001/offer/1', {
             method: 'POST',
-            body: btoa(JSON.stringify(pc.localDescription)),
+            body: JSON.stringify(pc.localDescription),
+            headers: {
+                "Content-Type": "application/json",
+            }
         })
 
         if (!res.ok) {
@@ -308,7 +311,7 @@
 
         const resText = await res.text()
         try {
-            await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(resText))))
+            await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(resText)))
         } catch (e) {
             alert(e)
         }
