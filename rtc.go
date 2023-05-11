@@ -4,16 +4,54 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/go-vgo/robotgo"
+	"github.com/openstadia/openstadia/types"
 	"github.com/pion/mediadevices"
 	"github.com/pion/mediadevices/pkg/codec/vpx"
 	"github.com/pion/mediadevices/pkg/frame"
+	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pion/mediadevices/pkg/prop"
 	"github.com/pion/webrtc/v3"
+	"golang.org/x/image/colornames"
+	"image"
 	"time"
 )
 
-func rtcOffer(offer webrtc.SessionDescription) *webrtc.SessionDescription {
-	config := webrtc.Configuration{
+func Mark(show *bool) video.TransformFunc {
+	return func(r video.Reader) video.Reader {
+		return video.ReaderFunc(func() (image.Image, func(), error) {
+			for {
+				img, _, err := r.Read()
+				if err != nil {
+					return nil, func() {}, err
+				}
+
+				switch v := img.(type) {
+				case *image.RGBA:
+					for yi := 0; yi < 16; yi++ {
+						for xi := 0; xi < 16; xi++ {
+							if *show {
+								v.Set(xi, yi, colornames.Red)
+							} else {
+								v.Set(xi, yi, colornames.White)
+							}
+						}
+					}
+				default:
+					fmt.Printf("unexpected type %T\n", v)
+				}
+
+				if *show {
+
+				}
+
+				return img, func() {}, nil
+			}
+		})
+	}
+}
+
+func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc.SessionDescription {
+	webrtcConfig := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
 				URLs: []string{"stun:stun.l.google.com:19302"},
@@ -35,18 +73,30 @@ func rtcOffer(offer webrtc.SessionDescription) *webrtc.SessionDescription {
 	mediaEngine := webrtc.MediaEngine{}
 	codecSelector.Populate(&mediaEngine)
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(&mediaEngine))
-	peerConnection, err := api.NewPeerConnection(config)
+	peerConnection, err := api.NewPeerConnection(webrtcConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	xvfb := NewXvfb(99, "-screen 0 640x480x24")
+	//TODO Add user app select
+	name := "ppsspp"
+	appConfig, err := config.GetApplicationByName(name)
+	if err != nil {
+		panic(err)
+	}
+
+	//TODO Add auto display number generation
+	var displayNum uint = 99
+
+	xvfb := NewXvfb(displayNum, appConfig.Width, appConfig.Height)
 	xvfb.Start()
 
+	//TODO Add display creation check
 	time.Sleep(time.Second * 5)
 
-	ppsspp := NewPpsspp(99)
-	ppsspp.Start()
+	display := fmt.Sprintf("DISPLAY=:%d", displayNum)
+	app := NewApplication("/home/user/ppsspp_build/PPSSPPSDL", nil, []string{display})
+	app.Start()
 
 	peerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		fmt.Printf("Connection State has changed %s \n", state.String())
@@ -60,7 +110,7 @@ func rtcOffer(offer webrtc.SessionDescription) *webrtc.SessionDescription {
 				panic(closeErr)
 			}
 			xvfb.Stop()
-			ppsspp.Stop()
+			app.Stop()
 			pTrack = nil
 		}
 	})
@@ -71,8 +121,9 @@ func rtcOffer(offer webrtc.SessionDescription) *webrtc.SessionDescription {
 		fmt.Printf("Connection State has changed %s \n", connectionState.String())
 	})
 
-	marker := false
-	mark := Mark(&marker)
+	//markerEnable := false
+	//marker := false
+
 	//scale := video.Scale(640, 480, video.ScalerFastNearestNeighbor)
 
 	peerConnection.OnDataChannel(func(d *webrtc.DataChannel) {
@@ -89,7 +140,7 @@ func rtcOffer(offer webrtc.SessionDescription) *webrtc.SessionDescription {
 			case 1:
 				value := msg.Data[0] != 0
 				fmt.Printf("Message from DataChannel '%s': '%t'\n", d.Label(), value)
-				marker = value
+				//marker = value
 			case 12:
 				event := int32(binary.LittleEndian.Uint32(msg.Data[:4]))
 				x := int32(binary.LittleEndian.Uint32(msg.Data[4:8]))
@@ -103,7 +154,6 @@ func rtcOffer(offer webrtc.SessionDescription) *webrtc.SessionDescription {
 				case 2:
 					robotgo.Scroll(-int(x), int(y))
 				}
-				fmt.Printf("x: %d, y: %d\n", x, y)
 			case 20:
 				if pGamepad != nil {
 					parseGamepadData(*pGamepad, msg.Data)
@@ -129,7 +179,11 @@ func rtcOffer(offer webrtc.SessionDescription) *webrtc.SessionDescription {
 	track := s.GetVideoTracks()[0]
 	switch v := track.(type) {
 	case *mediadevices.VideoTrack:
-		v.Transform(mark)
+		//if markerEnable {
+		//	mark := Mark(&marker)
+		//	v.Transform(mark)
+		//}
+
 		pTrack = v
 	default:
 		fmt.Printf("unexpected type %T\n", v)

@@ -1,19 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
 	"github.com/openstadia/openstadia/packet"
+	"github.com/openstadia/openstadia/types"
 	"github.com/openstadia/openstadia/uinput"
 	"github.com/pion/mediadevices"
 	_ "github.com/pion/mediadevices/pkg/driver/screen"
-	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pion/webrtc/v3"
-	"golang.org/x/image/colornames"
-	"image"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -34,80 +30,12 @@ import (
 var pGamepad *uinput.Gamepad
 var pTrack *mediadevices.VideoTrack
 
-func Mark(show *bool) video.TransformFunc {
-	return func(r video.Reader) video.Reader {
-		return video.ReaderFunc(func() (image.Image, func(), error) {
-			for {
-				img, _, err := r.Read()
-				if err != nil {
-					return nil, func() {}, err
-				}
-
-				switch v := img.(type) {
-				case *image.RGBA:
-					for yi := 0; yi < 16; yi++ {
-						for xi := 0; xi < 16; xi++ {
-							if *show {
-								v.Set(xi, yi, colornames.Red)
-							} else {
-								v.Set(xi, yi, colornames.White)
-							}
-						}
-					}
-				default:
-					fmt.Printf("unexpected type %T\n", v)
-				}
-
-				if *show {
-
-				}
-
-				return img, func() {}, nil
-			}
-		})
-	}
-}
-
-func rtcOfferHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		w.WriteHeader(404)
-		return
-	}
-
-	if pTrack != nil {
-		w.WriteHeader(404)
-		return
-	}
-
-	body, err := io.ReadAll(r.Body)
-	offer := webrtc.SessionDescription{}
-
-	err = json.Unmarshal(body, &offer)
-	if err != nil {
-		panic(err)
-	}
-
-	answer := rtcOffer(offer)
-
-	marshal, err := json.Marshal(answer)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = fmt.Fprintf(w, string(marshal))
-	if err != nil {
-		return
-	}
-}
-
-func ws(interrupt <-chan os.Signal) {
-	addr := "192.168.1.162:8001"
-
-	u := url.URL{Scheme: "ws", Host: addr, Path: "/ws"}
+func ws(config *types.Openstadia, interrupt <-chan os.Signal) {
+	u := url.URL{Scheme: "ws", Host: config.Hub, Path: "/ws"}
 	log.Printf("connecting to %s", u.String())
 
 	requestHeader := http.Header{}
-	requestHeader.Add("Authorization", "aaa")
+	requestHeader.Add("Authorization", config.Token)
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), requestHeader)
 	if err != nil {
@@ -132,7 +60,7 @@ func ws(interrupt <-chan os.Signal) {
 
 			log.Printf("recv package: %#v", packetReq)
 
-			answer := rtcOffer(packetReq.Data)
+			answer := rtcOffer(config, packetReq.Data)
 
 			packetRes := packet.Packet[webrtc.SessionDescription]{
 				Type: packet.TypeAck,
@@ -178,10 +106,17 @@ func ws(interrupt <-chan os.Signal) {
 func main() {
 	robotgo.MouseSleep = 0
 
+	config, err := types.Load()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Config %#v\n", config)
+
 	interrupt := make(chan os.Signal, 1)
 	//signal.Notify(interrupt, os.Interrupt)
 
-	go ws(interrupt)
+	go ws(config, interrupt)
 
 	remoteGamepad := true
 	if remoteGamepad {
@@ -198,11 +133,5 @@ func main() {
 		pGamepad = &gamepad
 	}
 
-	fs := http.FileServer(http.Dir("./static"))
-	http.Handle("/", fs)
-	http.HandleFunc("/rtcOffer", rtcOfferHandler)
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	select {}
 }

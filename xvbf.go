@@ -19,17 +19,19 @@ type xvfb struct {
 	cmd        *exec.Cmd
 	display    string
 	displayNum uint
-	xvfbArgs   string
 	cancel     context.CancelFunc
+	width      uint
+	height     uint
 }
 
-func NewXvfb(displayNum uint, xvfbArgs string) Xvfb {
+func NewXvfb(displayNum uint, width uint, height uint) Xvfb {
 	return &xvfb{
 		cmd:        nil,
 		display:    fmt.Sprintf(":%d", displayNum),
 		displayNum: displayNum,
-		xvfbArgs:   xvfbArgs,
 		cancel:     nil,
+		width:      width,
+		height:     height,
 	}
 }
 
@@ -67,16 +69,10 @@ func (x *xvfb) setDisplayEnvVariable() {
 	}
 }
 
-//480x272x24
-//720x408x24
-//960x544x24
-
-//640x480x24
-
 func (x *xvfb) spawnProcess() {
 	display := x.display
 	ctx, cancel := context.WithCancel(context.Background())
-	cmd := exec.CommandContext(ctx, "Xvfb", display, "-screen", "0", "960x544x24")
+	cmd := exec.CommandContext(ctx, "Xvfb", display, "-screen", "0", fmt.Sprintf("%dx%dx24", x.width, x.height))
 	cmd.Cancel = func() error {
 		return cmd.Process.Signal(os.Interrupt)
 	}

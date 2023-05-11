@@ -1,0 +1,9 @@
+hub: "127.0.0.1:8000"
+
+applications:
+  - name: "ppsspp"
+    command: [ "/home/user/ppsspp_build/PPSSPPSDL" ]
+    width: 960
+    height: 544
+
+token: "..."
