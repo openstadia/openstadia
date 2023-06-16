@@ -6,7 +6,7 @@ import (
 	"github.com/go-vgo/robotgo"
 	"github.com/openstadia/openstadia/types"
 	"github.com/pion/mediadevices"
-	"github.com/pion/mediadevices/pkg/codec/vpx"
+	"github.com/pion/mediadevices/pkg/codec/openh264"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pion/mediadevices/pkg/prop"
@@ -59,15 +59,15 @@ func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc
 		},
 	}
 
-	vp8params, err := vpx.NewVP8Params()
-	//vp8params, err := vp8.NewParams()
+	//vp8params, err := vpx.NewVP8Params()
+	h264params, err := openh264.NewParams()
 	if err != nil {
 		panic(err)
 	}
-	vp8params.BitRate = 10_000_000
+	h264params.BitRate = 10_000_000
 
 	codecSelector := mediadevices.NewCodecSelector(
-		mediadevices.WithVideoEncoders(&vp8params),
+		mediadevices.WithVideoEncoders(&h264params),
 	)
 
 	mediaEngine := webrtc.MediaEngine{}

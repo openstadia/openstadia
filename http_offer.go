@@ -46,6 +46,10 @@ func serveHttp(config *types.Openstadia) {
 	http.HandleFunc("/rtcOffer", func(w http.ResponseWriter, r *http.Request) {
 		rtcOfferHandler(config, w, r)
 	})
+
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/", fs)
+
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)

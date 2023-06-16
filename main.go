@@ -113,10 +113,11 @@ func main() {
 
 	fmt.Printf("Config %#v\n", config)
 
-	interrupt := make(chan os.Signal, 1)
+	//TODO Enable WS connection only if hub option presented
+	//interrupt := make(chan os.Signal, 1)
 	//signal.Notify(interrupt, os.Interrupt)
 
-	go ws(config, interrupt)
+	//go ws(config, interrupt)
 
 	remoteGamepad := true
 	if remoteGamepad {
@@ -133,5 +134,6 @@ func main() {
 		pGamepad = &gamepad
 	}
 
+	serveHttp(config)
 	select {}
 }
