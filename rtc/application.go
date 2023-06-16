@@ -1,4 +1,4 @@
-package main
+package rtc
 
 import (
 	"golang.org/x/net/context"

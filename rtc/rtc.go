@@ -1,56 +1,34 @@
-package main
+package rtc
 
 import (
 	"encoding/binary"
 	"fmt"
 	"github.com/go-vgo/robotgo"
-	"github.com/openstadia/openstadia/types"
+	c "github.com/openstadia/openstadia/config"
+	o "github.com/openstadia/openstadia/offer"
+	"github.com/openstadia/openstadia/uinput"
 	"github.com/pion/mediadevices"
-	"github.com/pion/mediadevices/pkg/codec/openh264"
 	"github.com/pion/mediadevices/pkg/frame"
-	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pion/mediadevices/pkg/prop"
 	"github.com/pion/webrtc/v3"
-	"golang.org/x/image/colornames"
-	"image"
 	"time"
 )
 
-func Mark(show *bool) video.TransformFunc {
-	return func(r video.Reader) video.Reader {
-		return video.ReaderFunc(func() (image.Image, func(), error) {
-			for {
-				img, _, err := r.Read()
-				if err != nil {
-					return nil, func() {}, err
-				}
-
-				switch v := img.(type) {
-				case *image.RGBA:
-					for yi := 0; yi < 16; yi++ {
-						for xi := 0; xi < 16; xi++ {
-							if *show {
-								v.Set(xi, yi, colornames.Red)
-							} else {
-								v.Set(xi, yi, colornames.White)
-							}
-						}
-					}
-				default:
-					fmt.Printf("unexpected type %T\n", v)
-				}
-
-				if *show {
-
-				}
-
-				return img, func() {}, nil
-			}
-		})
-	}
+type Rtc struct {
+	config  *c.Openstadia
+	track   *mediadevices.VideoTrack
+	gamepad *uinput.Gamepad
 }
 
-func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc.SessionDescription {
+func New(config *c.Openstadia, gamepad *uinput.Gamepad) *Rtc {
+	return &Rtc{config: config, gamepad: gamepad}
+}
+
+func (r *Rtc) IsBusy() bool {
+	return r.track != nil
+}
+
+func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 	webrtcConfig := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
@@ -59,15 +37,10 @@ func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc
 		},
 	}
 
-	//vp8params, err := vpx.NewVP8Params()
-	h264params, err := openh264.NewParams()
-	if err != nil {
-		panic(err)
-	}
-	h264params.BitRate = 10_000_000
+	codecParams := codecParams(offer)
 
 	codecSelector := mediadevices.NewCodecSelector(
-		mediadevices.WithVideoEncoders(&h264params),
+		mediadevices.WithVideoEncoders(codecParams),
 	)
 
 	mediaEngine := webrtc.MediaEngine{}
@@ -78,9 +51,8 @@ func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc
 		panic(err)
 	}
 
-	//TODO Add user app select
-	name := "ppsspp"
-	appConfig, err := config.GetApplicationByName(name)
+	name := offer.App.Name
+	appConfig, err := r.config.GetAppByName(name)
 	if err != nil {
 		panic(err)
 	}
@@ -95,7 +67,7 @@ func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc
 	time.Sleep(time.Second * 5)
 
 	display := fmt.Sprintf("DISPLAY=:%d", displayNum)
-	app := NewApplication("/home/user/ppsspp_build/PPSSPPSDL", nil, []string{display})
+	app := NewApplication(appConfig.Command[0], appConfig.Command[1:], []string{display})
 	app.Start()
 
 	peerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
@@ -105,13 +77,13 @@ func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc
 				fmt.Println(closeErr)
 			}
 		} else if state == webrtc.PeerConnectionStateClosed {
-			closeErr := pTrack.Close()
+			closeErr := r.track.Close()
 			if closeErr != nil {
 				panic(closeErr)
 			}
 			xvfb.Stop()
 			app.Stop()
-			pTrack = nil
+			r.track = nil
 		}
 	})
 
@@ -155,8 +127,8 @@ func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc
 					robotgo.Scroll(-int(x), int(y))
 				}
 			case 20:
-				if pGamepad != nil {
-					parseGamepadData(*pGamepad, msg.Data)
+				if r.gamepad != nil {
+					parseGamepadData(r.gamepad, msg.Data)
 				}
 			}
 		})
@@ -184,7 +156,7 @@ func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc
 		//	v.Transform(mark)
 		//}
 
-		pTrack = v
+		r.track = v
 	default:
 		fmt.Printf("unexpected type %T\n", v)
 	}
@@ -204,7 +176,7 @@ func rtcOffer(config *types.Openstadia, offer webrtc.SessionDescription) *webrtc
 	}
 
 	// Set the remote SessionDescription
-	err = peerConnection.SetRemoteDescription(offer)
+	err = peerConnection.SetRemoteDescription(offer.SessionDescription)
 	if err != nil {
 		panic(err)
 	}

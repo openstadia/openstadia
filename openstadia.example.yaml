@@ -1,0 +1,12 @@
+hub:
+  addr: "hub.openstadia.com"
+  token: "my-awesome-secret"
+
+local:
+  addr: "0.0.0.0:8080"
+
+apps:
+  - name: "my-awesome-app"
+    command: [ "/home/user/my-awesome-app" ]
+    width: 1920
+    height: 1080

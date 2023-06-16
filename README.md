@@ -25,22 +25,26 @@ directory as the executable file. The following parameters can be configured:
 
 - hub: The URL address of the hub server. This parameter is not used in local deployments. Please note that there is
   currently no public hub available.
-- applications: A list of applications that users can launch from their remote devices. Currently, all applications open
+- local: Config for local deployment
+- apps: A list of applications that users can launch from their remote devices. Currently, all applications open
   on a virtual display to avoid disrupting the system's operation.
-- token: The token used for connecting to the hub server.
 
 Example configuration
 
 ```yaml
-hub: "hub.openstadia.com"
+hub:
+  addr: "hub.openstadia.com"
+  token: "my-awesome-secret"
 
-applications:
+local:
+  addr: "0.0.0.0:8080"
+
+apps:
   - name: "my-awesome-app"
     command: [ "/home/user/my-awesome-app" ]
     width: 1920
     height: 1080
 
-token: "my-awesome-secret"
 ```
 
 ## Getting Started
@@ -64,9 +68,11 @@ To build and run OpenStadia using the Go programming language, please follow the
 
 1. Install Go on your system by following the official documentation: [Installing Go](https://golang.org/doc/install).
 2. Clone the OpenStadia repository using the following command:
+
 ```shell
 git clone https://github.com/openstadia/openstadia.git
 ```
+
 3. Navigate to the project directory:
 
 ```shell

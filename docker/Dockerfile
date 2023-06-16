@@ -12,7 +12,7 @@ RUN apt-get install -y libgl1-mesa-dev libsdl2-dev libvulkan-dev
 ENV DISPLAY :99
 
 WORKDIR /app
-ADD . .
+ADD .. .
 RUN chmod a+x display.sh
 
 CMD { bash display.sh; }

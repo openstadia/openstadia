@@ -3,18 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/go-vgo/robotgo"
-	"github.com/gorilla/websocket"
-	"github.com/openstadia/openstadia/packet"
-	"github.com/openstadia/openstadia/types"
+	c "github.com/openstadia/openstadia/config"
+	h "github.com/openstadia/openstadia/hub"
+	l "github.com/openstadia/openstadia/local"
+	r "github.com/openstadia/openstadia/rtc"
 	"github.com/openstadia/openstadia/uinput"
-	"github.com/pion/mediadevices"
 	_ "github.com/pion/mediadevices/pkg/driver/screen"
-	"github.com/pion/webrtc/v3"
-	"log"
-	"net/http"
-	"net/url"
 	"os"
-	"time"
+	"os/signal"
 )
 
 //sudo apt-get install libx11-dev libxext-dev libvpx-dev
@@ -27,99 +23,19 @@ import (
 
 //https://github.com/intel/media-driver
 
-var pGamepad *uinput.Gamepad
-var pTrack *mediadevices.VideoTrack
-
-func ws(config *types.Openstadia, interrupt <-chan os.Signal) {
-	u := url.URL{Scheme: "ws", Host: config.Hub, Path: "/ws"}
-	log.Printf("connecting to %s", u.String())
-
-	requestHeader := http.Header{}
-	requestHeader.Add("Authorization", config.Token)
-
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), requestHeader)
-	if err != nil {
-		log.Fatal("dial:", err)
-	}
-	defer c.Close()
-
-	done := make(chan struct{})
-
-	go func() {
-		defer close(done)
-		for {
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				log.Println("read:", err)
-				return
-			}
-			log.Printf("recv: %s", message)
-
-			packetReq := packet.Packet[webrtc.SessionDescription]{}
-			packetReq.Decode(message)
-
-			log.Printf("recv package: %#v", packetReq)
-
-			answer := rtcOffer(config, packetReq.Data)
-
-			packetRes := packet.Packet[webrtc.SessionDescription]{
-				Type: packet.TypeAck,
-				Data: *answer,
-				Id:   packetReq.Id,
-			}
-
-			log.Printf("return package: %#v", packetRes)
-
-			err = c.WriteMessage(websocket.TextMessage, packetRes.Encode())
-			if err != nil {
-				panic(err)
-			}
-		}
-	}()
-
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-done:
-			return
-		case <-interrupt:
-			log.Println("interrupt")
-
-			// Cleanly close the connection by sending a close message and then
-			// waiting (with timeout) for the server to close the connection.
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				log.Println("write close:", err)
-				return
-			}
-			select {
-			case <-done:
-			case <-time.After(time.Second):
-			}
-			return
-		}
-	}
-}
-
 func main() {
 	robotgo.MouseSleep = 0
 
-	config, err := types.Load()
+	config, err := c.Load()
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("Config %#v\n", config)
 
-	//TODO Enable WS connection only if hub option presented
-	//interrupt := make(chan os.Signal, 1)
-	//signal.Notify(interrupt, os.Interrupt)
-
-	//go ws(config, interrupt)
-
 	remoteGamepad := true
+	var gamepad uinput.Gamepad
+
 	if remoteGamepad {
 		gamepad, err := uinput.CreateGamepad("/dev/uinput", []byte("Xbox One Wireless Controller"), 0x045E, 0x02EA)
 		if err != nil {
@@ -131,9 +47,22 @@ func main() {
 				panic(err)
 			}
 		}(gamepad)
-		pGamepad = &gamepad
 	}
 
-	serveHttp(config)
+	rtc := r.New(config, &gamepad)
+	local := l.New(config, rtc)
+	hub := h.New(config, rtc)
+
+	if config.Hub != nil {
+		interrupt := make(chan os.Signal, 1)
+		signal.Notify(interrupt, os.Interrupt)
+
+		go hub.Start(interrupt)
+	}
+
+	if config.Local != nil {
+		go local.ServeHttp()
+	}
+
 	select {}
 }
