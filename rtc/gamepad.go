@@ -33,9 +33,7 @@ var hatMap = map[int]uinput.HatDirection{
 	15: uinput.HatRight,
 }
 
-func parseGamepadData(pGamepad *uinput.Gamepad, data []byte) {
-	gamepad := *pGamepad
-
+func parseGamepadData(gamepad uinput.Gamepad, data []byte) {
 	var axes [4]float32
 	for i := 0; i < 4; i++ {
 		axes[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[4*i:]))

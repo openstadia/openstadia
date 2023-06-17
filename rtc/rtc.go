@@ -128,7 +128,7 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 				}
 			case 20:
 				if r.gamepad != nil {
-					parseGamepadData(r.gamepad, msg.Data)
+					parseGamepadData(*r.gamepad, msg.Data)
 				}
 			}
 		})

@@ -34,7 +34,7 @@ func main() {
 	fmt.Printf("Config %#v\n", config)
 
 	remoteGamepad := true
-	var gamepad uinput.Gamepad
+	var pGamepad *uinput.Gamepad
 
 	if remoteGamepad {
 		gamepad, err := uinput.CreateGamepad("/dev/uinput", []byte("Xbox One Wireless Controller"), 0x045E, 0x02EA)
@@ -47,9 +47,10 @@ func main() {
 				panic(err)
 			}
 		}(gamepad)
+		pGamepad = &gamepad
 	}
 
-	rtc := r.New(config, &gamepad)
+	rtc := r.New(config, pGamepad)
 	local := l.New(config, rtc)
 	hub := h.New(config, rtc)
 

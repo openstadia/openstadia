@@ -29,6 +29,23 @@
 </head>
 <body>
 
+<form id="connect">
+    <label for="type">Codecs:</label>
+    <select id="type" name="type">
+        <option value="vp8">VP8</option>
+        <option value="vp9">VP9</option>
+        <option value="openh264">OpenH264</option>
+    </select>
+
+    <label for="bitrate">Bitrate:</label>
+    <input id="bitrate" type="number" value="10000000"/>
+
+    <label for="app">Apps:</label>
+    <select id="app" name="app">
+    </select>
+</form>
+
+
 <button id="start">Start HTTP Session</button>
 
 <h3>Video</h3>
@@ -124,15 +141,22 @@
         sendChannel.onmessage = () => console.log('sendChannel.onmessage');
         sendChannel.onclose = () => console.log('sendChannel.onclose');
 
+        const formElements = document.forms['connect'].elements
+        const codecType = formElements.type.value
+        const bitrate = formElements.bitrate.valueAsNumber
+        const app = formElements.app.value
+
         const offer = await pc.createOffer()
         await pc.setLocalDescription(offer)
 
         const body = {
             sdp: pc.localDescription.sdp,
             type: pc.localDescription.type,
-            app: {name: "ppsspp"},
-            codec: {type: "vp8", bitrate: 10_000_000}
+            app: {name: app},
+            codec: {type: codecType, bitrate: bitrate}
         }
+
+        console.log(body)
 
         const res = await fetch('/api/offer', {
             method: 'POST',
@@ -186,11 +210,32 @@
                 axes[index] = axe
             });
 
-            console.log(buffer)
             sendChannel.send(buffer)
         }
         rafID = window.requestAnimationFrame(pollGamepad);
     };
+
+    const loadApps = async () => {
+        const res = await fetch('/api/apps', {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json",
+            }
+        })
+
+        if (!res.ok) {
+            return
+        }
+
+        const apps = await res.json()
+        const appsEl = document.forms['connect'].elements.app
+
+        apps.map((app) => {
+            const option = new Option(app, app)
+            appsEl.options.add(option)
+        })
+    }
+    loadApps()
 
 </script>
 </body>

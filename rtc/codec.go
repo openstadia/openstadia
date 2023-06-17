@@ -14,6 +14,7 @@ func codecParams(offer o.Offer) codec.VideoEncoderBuilder {
 	case o.Vp8:
 		vp8params, err := vpx.NewVP8Params()
 		vp8params.BitRate = offer.Codec.BitRate
+		vp8params.RateControlEndUsage = vpx.RateControlCBR
 		if err != nil {
 			panic(err)
 		}

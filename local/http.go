@@ -55,8 +55,28 @@ func (l *Local) rtcOfferHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (l *Local) getApps(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(404)
+		return
+	}
+
+	apps := make([]string, 0)
+	for _, app := range l.config.GetApps() {
+		apps = append(apps, app.Name)
+	}
+
+	marshal, err := json.Marshal(apps)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = fmt.Fprintf(w, string(marshal))
+}
+
 func (l *Local) ServeHttp() {
 	http.HandleFunc("/api/offer", l.rtcOfferHandler)
+	http.HandleFunc("/api/apps", l.getApps)
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
