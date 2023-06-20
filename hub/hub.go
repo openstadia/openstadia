@@ -4,7 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/openstadia/openstadia/config"
 	"github.com/openstadia/openstadia/offer"
-	"github.com/openstadia/openstadia/packet"
+	p "github.com/openstadia/openstadia/packet"
 	"github.com/openstadia/openstadia/rtc"
 	"github.com/pion/webrtc/v3"
 	"log"
@@ -51,25 +51,39 @@ func (h *Hub) Start(interrupt <-chan os.Signal) {
 			}
 			log.Printf("recv: %s", message)
 
-			packetReq := packet.Packet[offer.Offer]{}
-			packetReq.Decode(message)
-
-			log.Printf("recv package: %#v", packetReq)
-
-			answer := h.rtc.Offer(packetReq.Data)
-
-			packetRes := packet.Packet[webrtc.SessionDescription]{
-				Type: packet.TypeAck,
-				Data: *answer,
-				Id:   packetReq.Id,
-			}
-
-			log.Printf("return package: %#v", packetRes)
-
-			err = c.WriteMessage(websocket.TextMessage, packetRes.Encode())
+			header := p.Header{}
+			err = header.Decode(message)
 			if err != nil {
 				panic(err)
 			}
+
+			if header.Name == "OFFER" {
+				packet := p.Packet[offer.Offer]{}
+				packet.Decode(message)
+
+				answer := h.rtc.Offer(packet.Payload)
+
+				packetRes := p.Packet[webrtc.SessionDescription]{
+					Header: p.Header{
+						Type: p.TypeAck,
+						Id:   packet.Header.Id,
+					},
+					Payload: *answer,
+				}
+
+				log.Printf("return package: %#v", packetRes)
+
+				encoded, err := packet.Encode()
+				if err != nil {
+					panic(err)
+				}
+
+				err = c.WriteMessage(websocket.TextMessage, encoded)
+				if err != nil {
+					panic(err)
+				}
+			}
+
 		}
 	}()
 
