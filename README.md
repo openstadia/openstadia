@@ -3,6 +3,13 @@
 OpenStadia is an open-source project that serves as an alternative to Google Stadia. It allows users to remotely connect
 to a powerful computer using the WebRTC protocol.
 
+## Social
+
+- Discord: [OpenStadia](https://discord.gg/tJGeKTEdgj)
+- Slack: [OpenStadia](https://openstadia.slack.com/)
+- Website: [www.openstadia.com](https://www.openstadia.com/)
+- VK: [OpenStadia](https://vk.com/openstadia)
+
 ## Deployment Options
 
 There are two deployment options available:
