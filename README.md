@@ -71,6 +71,8 @@ To get started with OpenStadia, follow these steps:
 
 ## Build Instructions
 
+### Linux
+
 To build and run OpenStadia using the Go programming language, please follow these instructions:
 
 1. Install Go on your system by following the official documentation: [Installing Go](https://golang.org/doc/install).
@@ -107,6 +109,38 @@ go build
 7. Connect to OpenStadia using a supported web browser or client application. http://127.0.0.1:8080
 
 8. Enjoy remote access to a powerful computer for gaming or other resource-intensive tasks.
+
+### Windows
+
+1. Install Go on your system by following the official documentation: [Installing Go](https://golang.org/doc/install).
+2. Install MSYS2 on your system by following the official documentation: [Installing MSYS2](https://www.msys2.org/).
+3. Open MSYS2 UCRT64 console
+4. Install build requirements
+
+```shell
+pacman -S mingw-w64-ucrt-x86_64-toolchain
+pacman -S mingw-w64-ucrt-x86_64-libvpx
+pacman -S mingw-w64-ucrt-x86_64-libpng
+```
+
+5. Set environment variables and navigate to the project directory
+
+```shell
+export PATH=$PATH:/c/Go/bin
+cd /c/path-to-openstadia/openstadia/
+```
+
+6. Install the project dependencies using the following command:
+
+```shell
+go get
+```
+
+7. Build the OpenStadia application using the following command:
+
+```shell
+go build -v -x
+```
 
 ## Contributing
 

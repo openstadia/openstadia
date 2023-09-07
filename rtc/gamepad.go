@@ -2,7 +2,7 @@ package rtc
 
 import (
 	"encoding/binary"
-	uinput "github.com/openstadia/openstadia/uinput"
+	"github.com/openstadia/openstadia/uinput"
 	"math"
 )
 
