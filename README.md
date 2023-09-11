@@ -3,6 +3,13 @@
 OpenStadia is an open-source project that serves as an alternative to Google Stadia. It allows users to remotely connect
 to a powerful computer using the WebRTC protocol.
 
+## Social
+
+- Discord: [OpenStadia](https://discord.gg/tJGeKTEdgj)
+- Slack: [OpenStadia](https://openstadia.slack.com/)
+- Website: [www.openstadia.com](https://www.openstadia.com/)
+- VK: [OpenStadia](https://vk.com/openstadia)
+
 ## Deployment Options
 
 There are two deployment options available:
@@ -17,6 +24,23 @@ There are two deployment options available:
 OpenStadia currently supports the following operating system:
 
 - Linux (Tested on Ubuntu 22.04)
+- Windows (WIP)
+
+## Support Table
+
+|                | Linux           | Windows         | macOS           | External Device |
+|----------------|-----------------|-----------------|-----------------|-----------------|
+| Mouse          | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Keyboard       | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Gamepad        | :green_circle:  | :yellow_circle: | :purple_circle: | :yellow_circle: |
+| Virtual Screen | :green_circle:  | :black_circle:  | :red_circle:    | :black_circle:  |
+| Container      | :purple_circle: | :black_circle:  | :red_circle:    | :black_circle:  |
+
+- :green_circle: - supported
+- :purple_circle: - support is planned
+- :red_circle: - support is NOT planned
+- :yellow_circle: - work in progress
+- :black_circle: - support is NOT possible
 
 ## Configuration
 
@@ -66,6 +90,8 @@ To get started with OpenStadia, follow these steps:
 
 To build and run OpenStadia using the Go programming language, please follow these instructions:
 
+### Common
+
 1. Install Go on your system by following the official documentation: [Installing Go](https://golang.org/doc/install).
 2. Clone the OpenStadia repository using the following command:
 
@@ -85,21 +111,63 @@ cd openstadia
 go get
 ```
 
-5. Build the OpenStadia application using the following command:
+### Linux
+
+1. Install build requirements
+
+```shell
+sudo apt-get install \
+  libx11-dev \
+  libxext-dev \
+  libvpx-dev \
+  libx11-dev \
+  xorg-dev \
+  libxtst-dev
+```
+
+2. Build the OpenStadia application using the following command:
 
 ```shell
 go build
 ```
 
-6. Run the OpenStadia application:
+
+### Windows
+
+1. Install MSYS2 on your system by following the official documentation: [Installing MSYS2](https://www.msys2.org/).
+2. Open MSYS2 UCRT64 console
+3. Install build requirements
+
+```shell
+pacman -S mingw-w64-ucrt-x86_64-toolchain
+pacman -S mingw-w64-ucrt-x86_64-libvpx
+pacman -S mingw-w64-ucrt-x86_64-libpng
+```
+
+4. Set environment variables and navigate to the project directory
+
+```shell
+export PATH=$PATH:/c/Go/bin
+cd /c/path-to-openstadia/openstadia/
+```
+
+5. Build the OpenStadia application using the following command:
+
+```shell
+go build -v -x
+```
+
+### Launching
+
+1. Run the OpenStadia application:
 
 ```shell
 ./openstadia
 ```
 
-7. Connect to OpenStadia using a supported web browser or client application. http://127.0.0.1:8080
+2. Connect to OpenStadia using a supported web browser or client application. http://127.0.0.1:8080
 
-8. Enjoy remote access to a powerful computer for gaming or other resource-intensive tasks.
+3. Enjoy remote access to a powerful computer for gaming or other resource-intensive tasks.
 
 ## Contributing
 
