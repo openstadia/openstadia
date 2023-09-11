@@ -88,9 +88,9 @@ To get started with OpenStadia, follow these steps:
 
 ## Build Instructions
 
-### Linux
-
 To build and run OpenStadia using the Go programming language, please follow these instructions:
+
+### Common
 
 1. Install Go on your system by following the official documentation: [Installing Go](https://golang.org/doc/install).
 2. Clone the OpenStadia repository using the following command:
@@ -111,28 +111,32 @@ cd openstadia
 go get
 ```
 
-5. Build the OpenStadia application using the following command:
+### Linux
+
+1. Install build requirements
+
+```shell
+sudo apt-get install \
+  libx11-dev \
+  libxext-dev \
+  libvpx-dev \
+  libx11-dev \
+  xorg-dev \
+  libxtst-dev
+```
+
+2. Build the OpenStadia application using the following command:
 
 ```shell
 go build
 ```
 
-6. Run the OpenStadia application:
-
-```shell
-./openstadia
-```
-
-7. Connect to OpenStadia using a supported web browser or client application. http://127.0.0.1:8080
-
-8. Enjoy remote access to a powerful computer for gaming or other resource-intensive tasks.
 
 ### Windows
 
-1. Install Go on your system by following the official documentation: [Installing Go](https://golang.org/doc/install).
-2. Install MSYS2 on your system by following the official documentation: [Installing MSYS2](https://www.msys2.org/).
-3. Open MSYS2 UCRT64 console
-4. Install build requirements
+1. Install MSYS2 on your system by following the official documentation: [Installing MSYS2](https://www.msys2.org/).
+2. Open MSYS2 UCRT64 console
+3. Install build requirements
 
 ```shell
 pacman -S mingw-w64-ucrt-x86_64-toolchain
@@ -140,24 +144,30 @@ pacman -S mingw-w64-ucrt-x86_64-libvpx
 pacman -S mingw-w64-ucrt-x86_64-libpng
 ```
 
-5. Set environment variables and navigate to the project directory
+4. Set environment variables and navigate to the project directory
 
 ```shell
 export PATH=$PATH:/c/Go/bin
 cd /c/path-to-openstadia/openstadia/
 ```
 
-6. Install the project dependencies using the following command:
-
-```shell
-go get
-```
-
-7. Build the OpenStadia application using the following command:
+5. Build the OpenStadia application using the following command:
 
 ```shell
 go build -v -x
 ```
+
+### Launching
+
+1. Run the OpenStadia application:
+
+```shell
+./openstadia
+```
+
+2. Connect to OpenStadia using a supported web browser or client application. http://127.0.0.1:8080
+
+3. Enjoy remote access to a powerful computer for gaming or other resource-intensive tasks.
 
 ## Contributing
 
