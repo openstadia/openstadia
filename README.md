@@ -24,6 +24,23 @@ There are two deployment options available:
 OpenStadia currently supports the following operating system:
 
 - Linux (Tested on Ubuntu 22.04)
+- Windows (WIP)
+
+## Support Table
+
+|                | Linux           | Windows         | macOS           | External Device |
+|----------------|-----------------|-----------------|-----------------|-----------------|
+| Mouse          | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Keyboard       | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Gamepad        | :green_circle:  | :yellow_circle: | :purple_circle: | :yellow_circle: |
+| Virtual Screen | :green_circle:  | :black_circle:  | :red_circle:    | :black_circle:  |
+| Container      | :purple_circle: | :black_circle:  | :red_circle:    | :black_circle:  |
+
+- :green_circle: - supported
+- :purple_circle: - support is planned
+- :red_circle: - support is NOT planned
+- :yellow_circle: - work in progress
+- :black_circle: - support is NOT possible
 
 ## Configuration
 
