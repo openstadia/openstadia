@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-vgo/robotgo"
 	c "github.com/openstadia/openstadia/config"
 	h "github.com/openstadia/openstadia/hub"
+	g "github.com/openstadia/openstadia/inputs/gamepad"
+	"github.com/openstadia/openstadia/inputs/keyboard"
+	"github.com/openstadia/openstadia/inputs/mouse"
 	l "github.com/openstadia/openstadia/local"
 	r "github.com/openstadia/openstadia/rtc"
-	"github.com/openstadia/openstadia/uinput"
 	_ "github.com/pion/mediadevices/pkg/driver/screen"
 	"os"
 	"os/signal"
@@ -19,8 +20,6 @@ import (
 //https://github.com/intel/media-driver
 
 func main() {
-	robotgo.MouseSleep = 0
-
 	config, err := c.Load()
 	if err != nil {
 		panic(err)
@@ -29,23 +28,33 @@ func main() {
 	fmt.Printf("Config %#v\n", config)
 
 	remoteGamepad := true
-	var pGamepad *uinput.Gamepad
+	var gamepad_ g.Gamepad
 
 	if remoteGamepad {
-		gamepad, err := uinput.CreateGamepad("/dev/uinput", []byte("Xbox One Wireless Controller"), 0x045E, 0x02EA)
+		gamepad, err := g.CreateGamepad("/dev/uinput", []byte("Xbox One Wireless Controller"), 0x045E, 0x02EA)
 		if err != nil {
 			panic(err)
 		}
-		defer func(gamepad uinput.Gamepad) {
+		defer func(gamepad g.Gamepad) {
 			err := gamepad.Close()
 			if err != nil {
 				panic(err)
 			}
 		}(gamepad)
-		pGamepad = &gamepad
+		gamepad_ = gamepad
 	}
 
-	rtc := r.New(config, pGamepad)
+	mouse_, err := mouse.Create()
+	if err != nil {
+		panic(err)
+	}
+
+	keyboard_, err := keyboard.Create()
+	if err != nil {
+		panic(err)
+	}
+
+	rtc := r.New(config, mouse_, keyboard_, gamepad_)
 	local := l.New(config, rtc)
 	hub := h.New(config, rtc)
 

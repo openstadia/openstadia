@@ -2,13 +2,13 @@ package config
 
 import (
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
+	"os"
 )
 
 func Load() (*Openstadia, error) {
 	config := Openstadia{}
 
-	yamlFile, err := ioutil.ReadFile("openstadia.yaml")
+	yamlFile, err := os.ReadFile("openstadia.yaml")
 	if err != nil {
 		return nil, err
 	}

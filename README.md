@@ -28,13 +28,13 @@ OpenStadia currently supports the following operating system:
 
 ## Support Table
 
-|                | Linux           | Windows         | macOS           | External Device |
-|----------------|-----------------|-----------------|-----------------|-----------------|
-| Mouse          | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
-| Keyboard       | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
-| Gamepad        | :green_circle:  | :yellow_circle: | :purple_circle: | :yellow_circle: |
-| Virtual Screen | :green_circle:  | :black_circle:  | :red_circle:    | :black_circle:  |
-| Container      | :purple_circle: | :black_circle:  | :red_circle:    | :black_circle:  |
+|                 | Linux           | Windows         | macOS           | External Device |
+|-----------------|-----------------|-----------------|-----------------|-----------------|
+| Mouse           | :green_circle:  | :yellow_circle: | :purple_circle: | :yellow_circle: |
+| Keyboard        | :yellow_circle: | :yellow_circle: | :purple_circle: | :yellow_circle: |
+| Gamepad         | :green_circle:  | :yellow_circle: | :purple_circle: | :yellow_circle: |
+| Virtual Display | :green_circle:  | :black_circle:  | :red_circle:    | :black_circle:  |
+| Container       | :purple_circle: | :black_circle:  | :red_circle:    | :black_circle:  |
 
 - :green_circle: - supported
 - :purple_circle: - support is planned
@@ -130,7 +130,6 @@ sudo apt-get install \
 ```shell
 go build
 ```
-
 
 ### Windows
 

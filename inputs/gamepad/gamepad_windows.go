@@ -1,5 +1,6 @@
-package uinput
+package gamepad
 
+// TODO Reformat to pointer usage
 type vGamepad struct {
 	name []byte
 }

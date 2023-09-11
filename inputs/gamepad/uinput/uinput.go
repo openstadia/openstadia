@@ -85,7 +85,7 @@ import (
 	"unsafe"
 )
 
-func validateDevicePath(path string) error {
+func ValidateDevicePath(path string) error {
 	if path == "" {
 		return errors.New("device path must not be empty")
 	}
@@ -93,7 +93,7 @@ func validateDevicePath(path string) error {
 	return err
 }
 
-func validateUinputName(name []byte) error {
+func ValidateUinputName(name []byte) error {
 	if name == nil || len(name) == 0 {
 		return errors.New("device name may not be empty")
 	}
@@ -103,13 +103,13 @@ func validateUinputName(name []byte) error {
 	return nil
 }
 
-func toUinputName(name []byte) (uinputName [uinputMaxNameSize]byte) {
+func ToUinputName(name []byte) (uinputName [uinputMaxNameSize]byte) {
 	var fixedSizeName [uinputMaxNameSize]byte
 	copy(fixedSizeName[:], name)
 	return fixedSizeName
 }
 
-func createDeviceFile(path string) (fd *os.File, err error) {
+func CreateDeviceFile(path string) (fd *os.File, err error) {
 	deviceFile, err := os.OpenFile(path, syscall.O_WRONLY|syscall.O_NONBLOCK, 0660)
 	if err != nil {
 		return nil, errors.New("could not open device file")
@@ -117,8 +117,8 @@ func createDeviceFile(path string) (fd *os.File, err error) {
 	return deviceFile, err
 }
 
-func registerDevice(deviceFile *os.File, evType uintptr) error {
-	err := ioctl(deviceFile, uiSetEvBit, evType)
+func RegisterDevice(deviceFile *os.File, evType uintptr) error {
+	err := Ioctl(deviceFile, uiSetEvBit, evType)
 	if err != nil {
 		defer deviceFile.Close()
 		err = releaseDevice(deviceFile)
@@ -130,7 +130,7 @@ func registerDevice(deviceFile *os.File, evType uintptr) error {
 	return nil
 }
 
-func createUsbDevice(deviceFile *os.File, dev uinputUserDev) (fd *os.File, err error) {
+func CreateUsbDevice(deviceFile *os.File, dev UinputUserDev) (fd *os.File, err error) {
 	buf := new(bytes.Buffer)
 	err = binary.Write(buf, binary.LittleEndian, dev)
 	if err != nil {
@@ -143,7 +143,7 @@ func createUsbDevice(deviceFile *os.File, dev uinputUserDev) (fd *os.File, err e
 		return nil, fmt.Errorf("failed to write uidev struct to device file: %v", err)
 	}
 
-	err = ioctl(deviceFile, uiDevCreate, uintptr(0))
+	err = Ioctl(deviceFile, uiDevCreate, uintptr(0))
 	if err != nil {
 		_ = deviceFile.Close()
 		return nil, fmt.Errorf("failed to create device: %v", err)
@@ -154,7 +154,7 @@ func createUsbDevice(deviceFile *os.File, dev uinputUserDev) (fd *os.File, err e
 	return deviceFile, err
 }
 
-func closeDevice(deviceFile *os.File) (err error) {
+func CloseDevice(deviceFile *os.File) (err error) {
 	err = releaseDevice(deviceFile)
 	if err != nil {
 		return fmt.Errorf("failed to close device: %v", err)
@@ -163,14 +163,14 @@ func closeDevice(deviceFile *os.File) (err error) {
 }
 
 func releaseDevice(deviceFile *os.File) (err error) {
-	return ioctl(deviceFile, uiDevDestroy, uintptr(0))
+	return Ioctl(deviceFile, uiDevDestroy, uintptr(0))
 }
 
 func fetchSyspath(deviceFile *os.File) (string, error) {
 	sysInputDir := "/sys/devices/virtual/input/"
 	// 64 for name + 1 for null byte
 	path := make([]byte, 65)
-	err := ioctl(deviceFile, uiGetSysname, uintptr(unsafe.Pointer(&path[0])))
+	err := Ioctl(deviceFile, uiGetSysname, uintptr(unsafe.Pointer(&path[0])))
 
 	sysInputDir = sysInputDir + string(path)
 	return sysInputDir, err
@@ -178,11 +178,11 @@ func fetchSyspath(deviceFile *os.File) (string, error) {
 
 // Note that mice and touch pads do have buttons as well. Therefore, this function is used
 // by all currently available devices and resides in the main source file.
-func sendBtnEvent(deviceFile *os.File, keys []int, btnState int) (err error) {
+func SendBtnEvent(deviceFile *os.File, keys []int, btnState int) (err error) {
 	for _, key := range keys {
-		buf, err := inputEventToBuffer(inputEvent{
+		buf, err := InputEventToBuffer(InputEvent{
 			Time:  syscall.Timeval{Sec: 0, Usec: 0},
-			Type:  evKey,
+			Type:  EvKey,
 			Code:  uint16(key),
 			Value: int32(btnState)})
 		if err != nil {
@@ -193,11 +193,11 @@ func sendBtnEvent(deviceFile *os.File, keys []int, btnState int) (err error) {
 			return fmt.Errorf("writing btnEvent structure to the device file failed: %v", err)
 		}
 	}
-	return syncEvents(deviceFile)
+	return SyncEvents(deviceFile)
 }
 
-func syncEvents(deviceFile *os.File) (err error) {
-	buf, err := inputEventToBuffer(inputEvent{
+func SyncEvents(deviceFile *os.File) (err error) {
+	buf, err := InputEventToBuffer(InputEvent{
 		Time:  syscall.Timeval{Sec: 0, Usec: 0},
 		Type:  evSyn,
 		Code:  uint16(synReport),
@@ -209,7 +209,7 @@ func syncEvents(deviceFile *os.File) (err error) {
 	return err
 }
 
-func inputEventToBuffer(iev inputEvent) (buffer []byte, err error) {
+func InputEventToBuffer(iev InputEvent) (buffer []byte, err error) {
 	buf := bytes.NewBuffer(make([]byte, 0, 24))
 	err = binary.Write(buf, binary.LittleEndian, iev)
 	if err != nil {
@@ -219,7 +219,7 @@ func inputEventToBuffer(iev inputEvent) (buffer []byte, err error) {
 }
 
 // original function taken from: https://github.com/tianon/debian-golang-pty/blob/master/ioctl.go
-func ioctl(deviceFile *os.File, cmd, ptr uintptr) error {
+func Ioctl(deviceFile *os.File, cmd, ptr uintptr) error {
 	_, _, errorCode := syscall.Syscall(syscall.SYS_IOCTL, deviceFile.Fd(), cmd, ptr)
 	if errorCode != 0 {
 		return errorCode

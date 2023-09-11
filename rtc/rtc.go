@@ -3,10 +3,12 @@ package rtc
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/go-vgo/robotgo"
 	c "github.com/openstadia/openstadia/config"
+	"github.com/openstadia/openstadia/display"
+	"github.com/openstadia/openstadia/inputs/gamepad"
+	"github.com/openstadia/openstadia/inputs/keyboard"
+	"github.com/openstadia/openstadia/inputs/mouse"
 	o "github.com/openstadia/openstadia/offer"
-	"github.com/openstadia/openstadia/uinput"
 	"github.com/pion/mediadevices"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/prop"
@@ -15,13 +17,15 @@ import (
 )
 
 type Rtc struct {
-	config  *c.Openstadia
-	track   *mediadevices.VideoTrack
-	gamepad *uinput.Gamepad
+	config   *c.Openstadia
+	track    *mediadevices.VideoTrack
+	mouse    mouse.Mouse
+	keyboard keyboard.Keyboard
+	gamepad  gamepad.Gamepad
 }
 
-func New(config *c.Openstadia, gamepad *uinput.Gamepad) *Rtc {
-	return &Rtc{config: config, gamepad: gamepad}
+func New(config *c.Openstadia, mouse mouse.Mouse, keyboard keyboard.Keyboard, gamepad gamepad.Gamepad) *Rtc {
+	return &Rtc{config: config, mouse: mouse, keyboard: keyboard, gamepad: gamepad}
 }
 
 func (r *Rtc) IsBusy() bool {
@@ -57,17 +61,14 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 		panic(err)
 	}
 
-	//TODO Add auto display number generation
-	var displayNum uint = 99
-
-	xvfb := NewXvfb(displayNum, appConfig.Width, appConfig.Height)
-	xvfb.Start()
+	display_ := display.Create(appConfig.Width, appConfig.Height)
+	display_.Start()
 
 	//TODO Add display creation check
 	time.Sleep(time.Second * 5)
 
-	display := fmt.Sprintf("DISPLAY=:%d", displayNum)
-	app := NewApplication(appConfig.Command[0], appConfig.Command[1:], []string{display})
+	env := display_.AppEnv()
+	app := NewApplication(appConfig.Command[0], appConfig.Command[1:], env)
 	app.Start()
 
 	peerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
@@ -81,7 +82,7 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 			if closeErr != nil {
 				panic(closeErr)
 			}
-			xvfb.Stop()
+			display_.Stop()
 			app.Stop()
 			r.track = nil
 		}
@@ -120,15 +121,15 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 
 				switch event {
 				case 0:
-					robotgo.Move(int(x), int(y))
+					r.mouse.Move(int(x), int(y))
 				case 1:
-					robotgo.Click()
+					r.mouse.Click()
 				case 2:
-					robotgo.Scroll(-int(x), int(y))
+					r.mouse.Scroll(int(x), int(y))
 				}
 			case 20:
 				if r.gamepad != nil {
-					parseGamepadData(*r.gamepad, msg.Data)
+					parseGamepadData(r.gamepad, msg.Data)
 				}
 			}
 		})

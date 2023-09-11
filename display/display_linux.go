@@ -1,4 +1,4 @@
-package rtc
+package display
 
 import (
 	"fmt"
@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-type Xvfb interface {
-	Start()
-	Stop()
-}
-
 type xvfb struct {
 	cmd        *exec.Cmd
 	display    string
@@ -24,7 +19,9 @@ type xvfb struct {
 	height     uint
 }
 
-func NewXvfb(displayNum uint, width uint, height uint) Xvfb {
+func Create(width uint, height uint) Display {
+	displayNum := getDisplayNum()
+
 	return &xvfb{
 		cmd:        nil,
 		display:    fmt.Sprintf(":%d", displayNum),
@@ -98,4 +95,17 @@ func (x *xvfb) spawnProcess() {
 
 func (x *xvfb) getLockFile() string {
 	return fmt.Sprintf("/tmp/.X%d-lock", x.displayNum)
+}
+
+func (x *xvfb) AppEnv() []string {
+	displayEnv := fmt.Sprintf("DISPLAY=:%d", x.displayNum)
+	env := []string{displayEnv}
+	return env
+}
+
+func getDisplayNum() uint {
+	//TODO Add auto display number generation
+	var displayNum uint = 99
+
+	return displayNum
 }

@@ -1,4 +1,4 @@
-package uinput
+package gamepad
 
 import "io"
 

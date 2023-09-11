@@ -2,10 +2,12 @@ package rtc
 
 import (
 	"encoding/binary"
-	"github.com/openstadia/openstadia/uinput"
+	"github.com/openstadia/openstadia/inputs/gamepad"
+	"github.com/openstadia/openstadia/inputs/gamepad/uinput"
 	"math"
 )
 
+// TODO Move to Linux specific folder
 var buttonsMap = map[int]int{
 	0: 0x130,
 	1: 0x131,
@@ -26,14 +28,14 @@ var buttonsMap = map[int]int{
 	16: uinput.ButtonMode,
 }
 
-var hatMap = map[int]uinput.HatDirection{
-	12: uinput.HatUp,
-	13: uinput.HatDown,
-	14: uinput.HatLeft,
-	15: uinput.HatRight,
+var hatMap = map[int]gamepad.HatDirection{
+	12: gamepad.HatUp,
+	13: gamepad.HatDown,
+	14: gamepad.HatLeft,
+	15: gamepad.HatRight,
 }
 
-func parseGamepadData(gamepad uinput.Gamepad, data []byte) {
+func parseGamepadData(gamepad gamepad.Gamepad, data []byte) {
 	var axes [4]float32
 	for i := 0; i < 4; i++ {
 		axes[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[4*i:]))
@@ -64,7 +66,7 @@ func parseGamepadData(gamepad uinput.Gamepad, data []byte) {
 	pressHat(gamepad, 14, 15, buttons)
 }
 
-func pressHat(gamepad uinput.Gamepad, neg, pos int, buttons [17]bool) {
+func pressHat(gamepad gamepad.Gamepad, neg, pos int, buttons [17]bool) {
 	if buttons[neg] {
 		posHat := hatMap[neg]
 		err := gamepad.HatPress(posHat)
@@ -86,7 +88,7 @@ func pressHat(gamepad uinput.Gamepad, neg, pos int, buttons [17]bool) {
 	}
 }
 
-func pressButton(gamepad uinput.Gamepad, index int, buttons [17]bool) {
+func pressButton(gamepad gamepad.Gamepad, index int, buttons [17]bool) {
 	key := buttonsMap[index]
 	if buttons[index] {
 		err := gamepad.ButtonDown(key)
