@@ -12,7 +12,7 @@ type Header struct {
 	Name string `json:"name"`
 }
 
-func (h *Header) Decode(data []byte) error {
+func (h *Header) DecodeFromPacket(data []byte) error {
 	parts := bytes.Split(data, Separator)
 	if len(parts) != 2 {
 		return errors.New("wrong packet format")

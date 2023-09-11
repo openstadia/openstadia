@@ -13,7 +13,7 @@ const (
 	TypeAck   Type = "ACK"
 )
 
-var Separator = []byte{'.'}
+var Separator = []byte{'|'}
 
 type Packet[T any] struct {
 	Header  Header
@@ -46,7 +46,7 @@ func (p *Packet[T]) Encode() ([]byte, error) {
 		return nil, err
 	}
 
-	payload, err := json.Marshal(p.Header)
+	payload, err := json.Marshal(p.Payload)
 	if err != nil {
 		return nil, err
 	}
