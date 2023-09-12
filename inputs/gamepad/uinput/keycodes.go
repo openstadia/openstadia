@@ -1,3 +1,6 @@
+//go:build linux
+// +build linux
+
 package uinput
 
 // the constants that are defined here relate 1:1 to the constants defined in input.h and represent actual

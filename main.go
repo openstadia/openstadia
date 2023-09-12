@@ -9,7 +9,6 @@ import (
 	"github.com/openstadia/openstadia/inputs/mouse"
 	l "github.com/openstadia/openstadia/local"
 	r "github.com/openstadia/openstadia/rtc"
-	_ "github.com/pion/mediadevices/pkg/driver/screen"
 	"os"
 	"os/signal"
 )

@@ -3,8 +3,10 @@ package rtc
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/openstadia/openstadia/application"
 	c "github.com/openstadia/openstadia/config"
 	"github.com/openstadia/openstadia/display"
+	_ "github.com/openstadia/openstadia/driver/screen"
 	"github.com/openstadia/openstadia/inputs/gamepad"
 	"github.com/openstadia/openstadia/inputs/keyboard"
 	"github.com/openstadia/openstadia/inputs/mouse"
@@ -61,15 +63,26 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 		panic(err)
 	}
 
-	display_ := display.Create(appConfig.Width, appConfig.Height)
-	display_.Start()
+	var app application.Application
+	var display_ display.Display = nil
 
-	//TODO Add display creation check
-	time.Sleep(time.Second * 5)
+	if application.IsScreen(appConfig) {
+		app = application.NewScreen()
+	} else {
+		display_ := display.Create(appConfig.Width, appConfig.Height)
+		display_.Start()
 
-	env := display_.AppEnv()
-	app := NewApplication(appConfig.Command[0], appConfig.Command[1:], env)
-	app.Start()
+		//TODO Add display creation check
+		time.Sleep(time.Second * 5)
+
+		env := display_.AppEnv()
+		app = application.NewCmd(appConfig.Command[0], appConfig.Command[1:], env)
+	}
+
+	err = app.Start()
+	if err != nil {
+		panic(err)
+	}
 
 	peerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		fmt.Printf("Connection State has changed %s \n", state.String())
@@ -82,7 +95,11 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 			if closeErr != nil {
 				panic(closeErr)
 			}
-			display_.Stop()
+
+			if display_ != nil {
+				display_.Stop()
+			}
+
 			app.Stop()
 			r.track = nil
 		}

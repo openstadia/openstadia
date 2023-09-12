@@ -3,30 +3,8 @@ package rtc
 import (
 	"encoding/binary"
 	"github.com/openstadia/openstadia/inputs/gamepad"
-	"github.com/openstadia/openstadia/inputs/gamepad/uinput"
 	"math"
 )
-
-// TODO Move to Linux specific folder
-var buttonsMap = map[int]int{
-	0: 0x130,
-	1: 0x131,
-	2: 0x133,
-	3: 0x134,
-
-	4: uinput.ButtonBumperLeft,
-	5: uinput.ButtonBumperRight,
-	6: uinput.ButtonTriggerLeft,
-	7: uinput.ButtonTriggerRight,
-
-	8: 0x13a,
-	9: 0x13b,
-
-	10: 0x13d,
-	11: 0x13e,
-
-	16: uinput.ButtonMode,
-}
 
 var hatMap = map[int]gamepad.HatDirection{
 	12: gamepad.HatUp,
@@ -89,14 +67,13 @@ func pressHat(gamepad gamepad.Gamepad, neg, pos int, buttons [17]bool) {
 }
 
 func pressButton(gamepad gamepad.Gamepad, index int, buttons [17]bool) {
-	key := buttonsMap[index]
 	if buttons[index] {
-		err := gamepad.ButtonDown(key)
+		err := gamepad.ButtonDown(index)
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		err := gamepad.ButtonUp(key)
+		err := gamepad.ButtonUp(index)
 		if err != nil {
 			panic(err)
 		}

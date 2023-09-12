@@ -1,4 +1,4 @@
-package rtc
+package application
 
 import (
 	"golang.org/x/net/context"
@@ -7,17 +7,12 @@ import (
 	"os/exec"
 )
 
-type Application interface {
-	Start() error
-	Stop()
-}
-
-type application struct {
+type cmdApp struct {
 	cmd    *exec.Cmd
 	cancel context.CancelFunc
 }
 
-func NewApplication(name string, arg []string, env []string) Application {
+func NewCmd(name string, arg []string, env []string) Application {
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, name, arg...)
 	cmd.Cancel = func() error {
@@ -25,13 +20,13 @@ func NewApplication(name string, arg []string, env []string) Application {
 	}
 	cmd.Env = append(os.Environ(), env...)
 
-	return &application{
+	return &cmdApp{
 		cmd:    cmd,
 		cancel: cancel,
 	}
 }
 
-func (a *application) Start() error {
+func (a *cmdApp) Start() error {
 	err := a.cmd.Start()
 	if err != nil {
 		return err
@@ -48,7 +43,7 @@ func (a *application) Start() error {
 	return nil
 }
 
-func (a *application) Stop() {
+func (a *cmdApp) Stop() {
 	if a.cmd == nil {
 		return
 	}

@@ -1,3 +1,6 @@
+//go:build linux
+// +build linux
+
 /*
 Package uinput is a pure go package that provides access to the userland input device driver uinput on linux systems.
 Virtual keyboard devices as well as virtual mouse input devices may be created using this package.

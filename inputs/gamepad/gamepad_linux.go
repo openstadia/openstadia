@@ -12,6 +12,26 @@ type vGamepad struct {
 	deviceFile *os.File
 }
 
+var buttonsMap = map[int]int{
+	0: 0x130,
+	1: 0x131,
+	2: 0x133,
+	3: 0x134,
+
+	4: uinput.ButtonBumperLeft,
+	5: uinput.ButtonBumperRight,
+	6: uinput.ButtonTriggerLeft,
+	7: uinput.ButtonTriggerRight,
+
+	8: 0x13a,
+	9: 0x13b,
+
+	10: 0x13d,
+	11: 0x13e,
+
+	16: uinput.ButtonMode,
+}
+
 // CreateGamepad will create a new gamepad using the given uinput
 // device path of the uinput device.
 func CreateGamepad(path string, name []byte, vendor uint16, product uint16) (Gamepad, error) { // TODO: Consider moving this to a generic function that works for all devices
@@ -33,6 +53,8 @@ func CreateGamepad(path string, name []byte, vendor uint16, product uint16) (Gam
 }
 
 func (vg *vGamepad) ButtonPress(key int) error {
+	key := buttonsMap[index]
+
 	err := vg.ButtonDown(key)
 	if err != nil {
 		return err
