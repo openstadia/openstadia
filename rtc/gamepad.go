@@ -34,7 +34,12 @@ func parseGamepadData(gamepad gamepad.Gamepad, data []byte) {
 	}
 
 	for i := 0; i < 16; i++ {
-		pressButton(gamepad, i, buttons)
+		if isHat(i) {
+			pressHat(gamepad, i, buttons)
+		} else {
+			pressButton(gamepad, i, buttons)
+		}
+
 	}
 
 	err = gamepad.LeftTrigger(triggers[0])
@@ -62,4 +67,25 @@ func pressButton(gamepad gamepad.Gamepad, index int, buttons [17]bool) {
 			panic(err)
 		}
 	}
+}
+
+var hatOpposite = map[int]int{
+	12: 13,
+	13: 12,
+	14: 15,
+	15: 14,
+}
+
+func isHat(index int) bool {
+	_, ok := hatOpposite[index]
+	return ok
+}
+
+func pressHat(gamepad gamepad.Gamepad, index int, buttons [17]bool) {
+	opposite := hatOpposite[index]
+	if buttons[opposite] {
+		return
+	}
+
+	pressButton(gamepad, index, buttons)
 }

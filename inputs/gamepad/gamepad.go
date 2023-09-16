@@ -4,11 +4,6 @@ import "io"
 
 type HatAction int
 
-const (
-	Press HatAction = iota + 1
-	Release
-)
-
 // Gamepad is a hybrid key / absolute change event output device.
 // It used to enable a program to simulate gamepad input events.
 type Gamepad interface {

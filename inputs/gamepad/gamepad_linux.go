@@ -12,6 +12,66 @@ type vGamepad struct {
 	deviceFile *os.File
 }
 
+func (vg *vGamepad) ButtonDown(key int) error {
+	// TODO Fix DPAD rewrite opposite direction
+	if isHatButton(key) {
+		direction := hatMap[key]
+		return vg.sendHatEvent(direction, Press)
+	}
+
+	button := buttonsMap[key]
+	if button == 0 {
+		return nil
+	}
+
+	return uinput.SendBtnEvent(vg.deviceFile, []int{button}, uinput.BtnStatePressed)
+}
+
+func (vg *vGamepad) ButtonUp(key int) error {
+	if isHatButton(key) {
+		direction := hatMap[key]
+		return vg.sendHatEvent(direction, Release)
+	}
+
+	button := buttonsMap[key]
+	if button == 0 {
+		return nil
+	}
+
+	return uinput.SendBtnEvent(vg.deviceFile, []int{button}, uinput.BtnStateReleased)
+}
+
+func (vg *vGamepad) LeftStick(x float32, y float32) error {
+	values := map[uint16]float32{}
+	values[uinput.AbsX] = x
+	values[uinput.AbsY] = y
+
+	return vg.sendStickEvent(values)
+}
+
+func (vg *vGamepad) RightStick(x float32, y float32) error {
+	values := map[uint16]float32{}
+	values[uinput.AbsRX] = x
+	values[uinput.AbsRY] = y
+
+	return vg.sendStickEvent(values)
+}
+
+func (vg *vGamepad) LeftTrigger(value float32) error {
+	return vg.sendTriggerEvent(uinput.AbsZ, value)
+}
+
+func (vg *vGamepad) RightTrigger(value float32) error {
+	return vg.sendTriggerEvent(uinput.AbsRZ, value)
+}
+
+func (vg *vGamepad) Update() {
+	err := uinput.SyncEvents(vg.deviceFile)
+	if err != nil {
+		panic(err)
+	}
+}
+
 const MaximumAxisValue = 32767
 
 // HatDirection specifies the direction of hat movement
@@ -24,36 +84,44 @@ const (
 	HatRight
 )
 
+const (
+	Press HatAction = iota + 1
+	Release
+)
+
 var buttonsMap = map[int]int{
-	0: 0x130,
-	1: 0x131,
-	2: 0x133,
-	3: 0x134,
+	0: uinput.ButtonSouth,
+	1: uinput.ButtonEast,
+	2: uinput.ButtonNorth,
+	3: uinput.ButtonWest,
 
 	4: uinput.ButtonBumperLeft,
 	5: uinput.ButtonBumperRight,
-	6: uinput.ButtonTriggerLeft,
-	7: uinput.ButtonTriggerRight,
 
-	8: 0x13a,
-	9: 0x13b,
+	//6: uinput.ButtonTriggerLeft,
+	//7: uinput.ButtonTriggerRight,
+	6: 0,
+	7: 0,
 
-	10: 0x13d,
-	11: 0x13e,
+	8: uinput.ButtonSelect,
+	9: uinput.ButtonStart,
+
+	10: uinput.ButtonThumbLeft,
+	11: uinput.ButtonThumbRight,
 
 	16: uinput.ButtonMode,
 }
 
-var hatMap = map[int]gamepad.HatDirection{
-	12: gamepad.HatUp,
-	13: gamepad.HatDown,
-	14: gamepad.HatLeft,
-	15: gamepad.HatRight,
+var hatMap = map[int]HatDirection{
+	12: HatUp,
+	13: HatDown,
+	14: HatLeft,
+	15: HatRight,
 }
 
 // CreateGamepad will create a new gamepad using the given uinput
 // device path of the uinput device.
-func CreateGamepad(path string, name []byte, vendor uint16, product uint16) (Gamepad, error) { // TODO: Consider moving this to a generic function that works for all devices
+func CreateGamepad(path string, name []byte, vendor uint16, product uint16) (Gamepad, error) {
 	err := uinput.ValidateDevicePath(path)
 	if err != nil {
 		return nil, err
@@ -69,68 +137,6 @@ func CreateGamepad(path string, name []byte, vendor uint16, product uint16) (Gam
 	}
 
 	return &vGamepad{name: name, deviceFile: fd}, nil
-}
-
-func (vg *vGamepad) ButtonPress(key int) error {
-	err := vg.ButtonDown(key)
-	if err != nil {
-		return err
-	}
-	err = vg.ButtonUp(key)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (vg *vGamepad) ButtonDown(key int) error {
-	button := buttonsMap[key]
-	return uinput.SendBtnEvent(vg.deviceFile, []int{button}, uinput.BtnStatePressed)
-}
-
-func (vg *vGamepad) ButtonUp(key int) error {
-	button := buttonsMap[key]
-	return uinput.SendBtnEvent(vg.deviceFile, []int{button}, uinput.BtnStateReleased)
-}
-
-func (vg *vGamepad) LeftStickMoveX(value float32) error {
-	return vg.sendStickAxisEvent(uinput.AbsX, value)
-}
-
-func (vg *vGamepad) LeftStickMoveY(value float32) error {
-	return vg.sendStickAxisEvent(uinput.AbsY, value)
-}
-
-func (vg *vGamepad) RightStickMoveX(value float32) error {
-	return vg.sendStickAxisEvent(uinput.AbsRX, value)
-}
-
-func (vg *vGamepad) RightStickMoveY(value float32) error {
-	return vg.sendStickAxisEvent(uinput.AbsRY, value)
-}
-
-func (vg *vGamepad) RightStickMove(x, y float32) error {
-	values := map[uint16]float32{}
-	values[uinput.AbsRX] = x
-	values[uinput.AbsRY] = y
-
-	return vg.sendStickEvent(values)
-}
-
-func (vg *vGamepad) LeftStickMove(x, y float32) error {
-	values := map[uint16]float32{}
-	values[uinput.AbsX] = x
-	values[uinput.AbsY] = y
-
-	return vg.sendStickEvent(values)
-}
-
-func (vg *vGamepad) HatPress(direction HatDirection) error {
-	return vg.sendHatEvent(direction, Press)
-}
-
-func (vg *vGamepad) HatRelease(direction HatDirection) error {
-	return vg.sendHatEvent(direction, Release)
 }
 
 func (vg *vGamepad) sendStickAxisEvent(absCode uint16, value float32) error {
@@ -150,29 +156,18 @@ func (vg *vGamepad) sendStickAxisEvent(absCode uint16, value float32) error {
 		return fmt.Errorf("failed to write abs stick event to device file: %v", err)
 	}
 
-	return uinput.SyncEvents(vg.deviceFile)
+	return nil
 }
 
 func (vg *vGamepad) sendStickEvent(values map[uint16]float32) error {
 	for code, value := range values {
-		ev := uinput.InputEvent{
-			Type:  uinput.EvAbs,
-			Code:  code,
-			Value: denormalizeInput(value),
-		}
-
-		buf, err := uinput.InputEventToBuffer(ev)
+		err := vg.sendStickAxisEvent(code, value)
 		if err != nil {
-			return fmt.Errorf("writing abs stick event failed: %v", err)
-		}
-
-		_, err = vg.deviceFile.Write(buf)
-		if err != nil {
-			return fmt.Errorf("failed to write abs stick event to device file: %v", err)
+			return err
 		}
 	}
 
-	return uinput.SyncEvents(vg.deviceFile)
+	return nil
 }
 
 func (vg *vGamepad) sendHatEvent(direction HatDirection, action HatAction) error {
@@ -181,25 +176,17 @@ func (vg *vGamepad) sendHatEvent(direction HatDirection, action HatAction) error
 
 	switch direction {
 	case HatUp:
-		{
-			event = uinput.AbsHat0Y
-			value = -MaximumAxisValue
-		}
+		event = uinput.AbsHat0Y
+		value = -MaximumAxisValue
 	case HatDown:
-		{
-			event = uinput.AbsHat0Y
-			value = MaximumAxisValue
-		}
+		event = uinput.AbsHat0Y
+		value = MaximumAxisValue
 	case HatLeft:
-		{
-			event = uinput.AbsHat0X
-			value = -MaximumAxisValue
-		}
+		event = uinput.AbsHat0X
+		value = -MaximumAxisValue
 	case HatRight:
-		{
-			event = uinput.AbsHat0X
-			value = MaximumAxisValue
-		}
+		event = uinput.AbsHat0X
+		value = MaximumAxisValue
 	default:
 		{
 			return errors.New("failed to parse input direction")
@@ -226,7 +213,27 @@ func (vg *vGamepad) sendHatEvent(direction HatDirection, action HatAction) error
 		return fmt.Errorf("failed to write abs stick event to device file: %v", err)
 	}
 
-	return uinput.SyncEvents(vg.deviceFile)
+	return nil
+}
+
+func (vg *vGamepad) sendTriggerEvent(absCode uint16, value float32) error {
+	ev := uinput.InputEvent{
+		Type:  uinput.EvAbs,
+		Code:  absCode,
+		Value: scaleTrigger(value),
+	}
+
+	buf, err := uinput.InputEventToBuffer(ev)
+	if err != nil {
+		return fmt.Errorf("writing abs stick event failed: %v", err)
+	}
+
+	_, err = vg.deviceFile.Write(buf)
+	if err != nil {
+		return fmt.Errorf("failed to write abs stick event to device file: %v", err)
+	}
+
+	return nil
 }
 
 func (vg *vGamepad) Close() error {
@@ -312,43 +319,16 @@ func createVGamepadDevice(path string, name []byte, vendor uint16, product uint1
 				Version: 0x301}})
 }
 
-func pressHat(gamepad gamepad.Gamepad, neg, pos int, buttons [17]bool) {
-	if buttons[neg] {
-		posHat := hatMap[neg]
-		err := gamepad.HatPress(posHat)
-		if err != nil {
-			panic(err)
-		}
-	} else if buttons[pos] {
-		negHat := hatMap[pos]
-		err := gamepad.HatPress(negHat)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		anyHat := hatMap[neg]
-		err := gamepad.HatRelease(anyHat)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func pressButton(gamepad gamepad.Gamepad, index int, buttons [17]bool) {
-	if buttons[index] {
-		err := gamepad.ButtonDown(index)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		err := gamepad.ButtonUp(index)
-		if err != nil {
-			panic(err)
-		}
-	}
+func isHatButton(button int) bool {
+	_, ok := hatMap[button]
+	return ok
 }
 
 // Takes in a normalized value (-1.0:1.0) and return an event value
 func denormalizeInput(value float32) int32 {
 	return int32(value * MaximumAxisValue)
+}
+
+func scaleTrigger(value float32) int32 {
+	return int32((2*value - 1) * MaximumAxisValue)
 }
