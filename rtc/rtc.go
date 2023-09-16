@@ -1,7 +1,6 @@
 package rtc
 
 import (
-	"encoding/binary"
 	"fmt"
 	"github.com/openstadia/openstadia/application"
 	c "github.com/openstadia/openstadia/config"
@@ -12,8 +11,6 @@ import (
 	"github.com/openstadia/openstadia/inputs/mouse"
 	o "github.com/openstadia/openstadia/offer"
 	"github.com/pion/mediadevices"
-	"github.com/pion/mediadevices/pkg/frame"
-	"github.com/pion/mediadevices/pkg/prop"
 	"github.com/pion/webrtc/v3"
 	"time"
 )
@@ -43,7 +40,7 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 		},
 	}
 
-	codecParams := codecParams(offer)
+	codecParams := getCodecParams(offer)
 
 	codecSelector := mediadevices.NewCodecSelector(
 		mediadevices.WithVideoEncoders(codecParams),
@@ -69,7 +66,7 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 	if application.IsScreen(appConfig) {
 		app = application.NewScreen()
 	} else {
-		display_ := display.Create(appConfig.Width, appConfig.Height)
+		display_ = display.Create(appConfig.Width, appConfig.Height)
 		display_.Start()
 
 		//TODO Add display creation check
@@ -126,41 +123,11 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 
 		// Register text message handling
 		d.OnMessage(func(msg webrtc.DataChannelMessage) {
-			switch l := len(msg.Data); l {
-			case 1:
-				value := msg.Data[0] != 0
-				fmt.Printf("Message from DataChannel '%s': '%t'\n", d.Label(), value)
-				//marker = value
-			case 12:
-				event := int32(binary.LittleEndian.Uint32(msg.Data[:4]))
-				x := int32(binary.LittleEndian.Uint32(msg.Data[4:8]))
-				y := int32(binary.LittleEndian.Uint32(msg.Data[8:]))
-
-				switch event {
-				case 0:
-					r.mouse.Move(int(x), int(y))
-				case 1:
-					r.mouse.Click()
-				case 2:
-					r.mouse.Scroll(int(x), int(y))
-				}
-			case 20:
-				if r.gamepad != nil {
-					parseGamepadData(r.gamepad, msg.Data)
-				}
-			}
+			handleMessage(r, d, msg)
 		})
 	})
 
-	s, err := mediadevices.GetDisplayMedia(mediadevices.MediaStreamConstraints{
-		Video: func(c *mediadevices.MediaTrackConstraints) {
-			c.FrameFormat = prop.FrameFormat(frame.FormatRGBA)
-			c.Width = prop.Int(640)
-			c.Height = prop.Int(480)
-			c.FrameRate = prop.Float(30)
-		},
-		Codec: codecSelector,
-	})
+	s, err := app.GetMedia(codecSelector)
 
 	if err != nil {
 		panic(err)

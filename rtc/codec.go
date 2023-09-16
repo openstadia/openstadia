@@ -7,7 +7,7 @@ import (
 	"github.com/pion/mediadevices/pkg/codec/vpx"
 )
 
-func codecParams(offer o.Offer) codec.VideoEncoderBuilder {
+func getCodecParams(offer o.Offer) codec.VideoEncoderBuilder {
 	var params codec.VideoEncoderBuilder
 
 	switch offer.Codec.Type {

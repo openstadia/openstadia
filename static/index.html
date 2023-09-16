@@ -96,14 +96,22 @@
         }
 
         const rect = event.currentTarget.getBoundingClientRect();
+
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
 
-        const data = new Uint32Array(3);
-        data[0] = 0
-        data[1] = x
-        data[2] = y
-        sendChannel.send(data)
+        const width = rect.width
+        const height = rect.height
+
+        const buffer = new ArrayBuffer(12)
+
+        const reportId = new Uint8Array(buffer, 0, 1)
+        reportId[0] = 0
+
+        const payload = new Float32Array(buffer, 4, 2);
+        payload[0] = x / width
+        payload[1] = y / height
+        sendChannel.send(buffer)
     })
 
     videoEl.addEventListener('click', (event) => {
@@ -111,9 +119,11 @@
             return;
         }
 
-        const data = new Uint32Array(3);
-        data[0] = 1;
-        sendChannel.send(data)
+        const buffer = new ArrayBuffer(4)
+
+        const reportId = new Uint8Array(buffer, 0, 1)
+        reportId[0] = 1;
+        sendChannel.send(buffer)
     })
 
     videoEl.addEventListener('wheel', (event) => {
@@ -122,11 +132,16 @@
         }
 
         event.preventDefault()
-        const data = new Int32Array(3);
-        data[0] = 2
+
+        const buffer = new ArrayBuffer(12)
+
+        const reportId = new Uint8Array(buffer, 0, 1)
+        reportId[0] = 2;
+
+        const data = new Int32Array(buffer, 4, 2);
         data[1] = event.deltaX
         data[2] = event.deltaY
-        sendChannel.send(data)
+        sendChannel.send(buffer)
     })
 
     pc.addEventListener('iceconnectionstatechange', e => log(pc.iceConnectionState))
@@ -196,20 +211,27 @@
                 continue;
             }
 
-            const buffer = new ArrayBuffer(20)
+            const buffer = new ArrayBuffer(32)
+
+            const reportId = new Uint8Array(buffer, 0, 1)
+            reportId[0] = 3;
 
             let buttons = 0
             gamepad.buttons.forEach((button, index) => {
                 buttons = buttons | (button.pressed << index)
             });
 
-            const buttonsData = new Uint32Array(buffer, 16, 1)
+            const buttonsData = new Uint32Array(buffer, 28, 1)
             buttonsData[0] = buttons
 
-            const axes = new Float32Array(buffer, 0, 4)
+            const axes = new Float32Array(buffer, 4, 4)
             gamepad.axes.forEach((axe, index) => {
                 axes[index] = axe
             });
+
+            const triggers = new Float32Array(buffer, 20, 2)
+            triggers[0] = gamepad.buttons[6].value
+            triggers[1] = gamepad.buttons[7].value
 
             sendChannel.send(buffer)
         }

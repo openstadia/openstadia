@@ -12,6 +12,18 @@ type vGamepad struct {
 	deviceFile *os.File
 }
 
+const MaximumAxisValue = 32767
+
+// HatDirection specifies the direction of hat movement
+type HatDirection int
+
+const (
+	HatUp HatDirection = iota + 1
+	HatDown
+	HatLeft
+	HatRight
+)
+
 var buttonsMap = map[int]int{
 	0: 0x130,
 	1: 0x131,
@@ -30,6 +42,13 @@ var buttonsMap = map[int]int{
 	11: 0x13e,
 
 	16: uinput.ButtonMode,
+}
+
+var hatMap = map[int]gamepad.HatDirection{
+	12: gamepad.HatUp,
+	13: gamepad.HatDown,
+	14: gamepad.HatLeft,
+	15: gamepad.HatRight,
 }
 
 // CreateGamepad will create a new gamepad using the given uinput
@@ -53,8 +72,6 @@ func CreateGamepad(path string, name []byte, vendor uint16, product uint16) (Gam
 }
 
 func (vg *vGamepad) ButtonPress(key int) error {
-	key := buttonsMap[index]
-
 	err := vg.ButtonDown(key)
 	if err != nil {
 		return err
@@ -67,11 +84,13 @@ func (vg *vGamepad) ButtonPress(key int) error {
 }
 
 func (vg *vGamepad) ButtonDown(key int) error {
-	return uinput.SendBtnEvent(vg.deviceFile, []int{key}, uinput.BtnStatePressed)
+	button := buttonsMap[key]
+	return uinput.SendBtnEvent(vg.deviceFile, []int{button}, uinput.BtnStatePressed)
 }
 
 func (vg *vGamepad) ButtonUp(key int) error {
-	return uinput.SendBtnEvent(vg.deviceFile, []int{key}, uinput.BtnStateReleased)
+	button := buttonsMap[key]
+	return uinput.SendBtnEvent(vg.deviceFile, []int{button}, uinput.BtnStateReleased)
 }
 
 func (vg *vGamepad) LeftStickMoveX(value float32) error {
@@ -291,6 +310,42 @@ func createVGamepadDevice(path string, name []byte, vendor uint16, product uint1
 				Vendor:  vendor,
 				Product: product,
 				Version: 0x301}})
+}
+
+func pressHat(gamepad gamepad.Gamepad, neg, pos int, buttons [17]bool) {
+	if buttons[neg] {
+		posHat := hatMap[neg]
+		err := gamepad.HatPress(posHat)
+		if err != nil {
+			panic(err)
+		}
+	} else if buttons[pos] {
+		negHat := hatMap[pos]
+		err := gamepad.HatPress(negHat)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		anyHat := hatMap[neg]
+		err := gamepad.HatRelease(anyHat)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func pressButton(gamepad gamepad.Gamepad, index int, buttons [17]bool) {
+	if buttons[index] {
+		err := gamepad.ButtonDown(index)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		err := gamepad.ButtonUp(index)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 // Takes in a normalized value (-1.0:1.0) and return an event value

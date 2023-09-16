@@ -6,13 +6,6 @@ import (
 	"math"
 )
 
-var hatMap = map[int]gamepad.HatDirection{
-	12: gamepad.HatUp,
-	13: gamepad.HatDown,
-	14: gamepad.HatLeft,
-	15: gamepad.HatRight,
-}
-
 func parseGamepadData(gamepad gamepad.Gamepad, data []byte) {
 	var axes [4]float32
 	for i := 0; i < 4; i++ {
@@ -20,50 +13,41 @@ func parseGamepadData(gamepad gamepad.Gamepad, data []byte) {
 	}
 
 	var buttons [17]bool
-	buttonsData := binary.LittleEndian.Uint32(data[16:])
+	buttonsData := binary.LittleEndian.Uint32(data[24:])
 	for i := 0; i < 17; i++ {
 		buttons[i] = (buttonsData & (1 << i)) != 0
 	}
 
-	err := gamepad.LeftStickMove(axes[0], axes[1])
+	var triggers [2]float32
+	for i := 0; i < 2; i++ {
+		triggers[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[16+4*i:]))
+	}
+
+	err := gamepad.LeftStick(axes[0], axes[1])
 	if err != nil {
 		panic(err)
 	}
 
-	err = gamepad.RightStickMove(axes[2], axes[3])
+	err = gamepad.RightStick(axes[2], axes[3])
 	if err != nil {
 		panic(err)
 	}
 
-	for i := 0; i < 12; i++ {
+	for i := 0; i < 16; i++ {
 		pressButton(gamepad, i, buttons)
 	}
-	pressButton(gamepad, 16, buttons)
 
-	pressHat(gamepad, 12, 13, buttons)
-	pressHat(gamepad, 14, 15, buttons)
-}
-
-func pressHat(gamepad gamepad.Gamepad, neg, pos int, buttons [17]bool) {
-	if buttons[neg] {
-		posHat := hatMap[neg]
-		err := gamepad.HatPress(posHat)
-		if err != nil {
-			panic(err)
-		}
-	} else if buttons[pos] {
-		negHat := hatMap[pos]
-		err := gamepad.HatPress(negHat)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		anyHat := hatMap[neg]
-		err := gamepad.HatRelease(anyHat)
-		if err != nil {
-			panic(err)
-		}
+	err = gamepad.LeftTrigger(triggers[0])
+	if err != nil {
+		panic(err)
 	}
+
+	err = gamepad.RightTrigger(triggers[1])
+	if err != nil {
+		panic(err)
+	}
+
+	gamepad.Update()
 }
 
 func pressButton(gamepad gamepad.Gamepad, index int, buttons [17]bool) {
