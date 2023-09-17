@@ -10,9 +10,15 @@ type ReportId byte
 
 const (
 	MouseMove   ReportId = 0
-	MouseClick  ReportId = 1
 	MouseScroll ReportId = 2
-	GamepadId   ReportId = 3
+
+	GamepadId ReportId = 3
+
+	KeyboardDown ReportId = 4
+	KeyboardUp   ReportId = 5
+
+	MouseDown ReportId = 6
+	MouseUp   ReportId = 7
 )
 
 func handleMessage(r *Rtc, d *webrtc.DataChannel, msg webrtc.DataChannelMessage) {
@@ -24,8 +30,6 @@ func handleMessage(r *Rtc, d *webrtc.DataChannel, msg webrtc.DataChannelMessage)
 		x := math.Float32frombits(binary.LittleEndian.Uint32(payload[0:]))
 		y := math.Float32frombits(binary.LittleEndian.Uint32(payload[4:]))
 		r.mouse.MoveFloat(x, y)
-	case MouseClick:
-		r.mouse.Click()
 	case MouseScroll:
 		x := binary.LittleEndian.Uint32(payload[0:])
 		y := binary.LittleEndian.Uint32(payload[4:])
@@ -34,5 +38,13 @@ func handleMessage(r *Rtc, d *webrtc.DataChannel, msg webrtc.DataChannelMessage)
 		if r.gamepad != nil {
 			parseGamepadData(r.gamepad, payload)
 		}
+	case KeyboardDown:
+		r.keyboard.KeyDown(string(payload))
+	case KeyboardUp:
+		r.keyboard.KeyUp(string(payload))
+	case MouseDown:
+		r.mouse.MouseDown()
+	case MouseUp:
+		r.mouse.MouseUp()
 	}
 }

@@ -3,24 +3,26 @@ package keyboard
 import "github.com/go-vgo/robotgo"
 
 type Keyboard interface {
+	KeyDown(key string)
+	KeyUp(key string)
 }
 
 type KeyboardImpl struct {
 }
 
-func Create() (Keyboard, error) {
+func Create() (*KeyboardImpl, error) {
 	return &KeyboardImpl{}, nil
 }
 
-func (k *KeyboardImpl) KeyDown(key string, args ...interface{}) {
-	err := robotgo.KeyDown(key, args...)
+func (k *KeyboardImpl) KeyDown(key string) {
+	err := robotgo.KeyDown(key)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (k *KeyboardImpl) KeyUp(key string, args ...interface{}) {
-	err := robotgo.KeyUp(key, args...)
+func (k *KeyboardImpl) KeyUp(key string) {
+	err := robotgo.KeyUp(key)
 	if err != nil {
 		panic(err)
 	}
