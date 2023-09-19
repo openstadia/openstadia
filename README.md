@@ -172,6 +172,20 @@ go build -v -x
 
 3. Enjoy remote access to a powerful computer for gaming or other resource-intensive tasks.
 
+## Experimental
+
+The project contains some experimental features that need to be activated by passing flags for the build
+
+| Flag | Description                                                                   |
+|------|-------------------------------------------------------------------------------|
+| d3d  | Enables experimental DXGI OutputDuplication screen capture (only for Windows) |
+
+### Example
+
+```shell
+go build -tags=d3d
+```
+
 ## Contributing
 
 Contributions to OpenStadia are welcome! If you encounter any issues or have ideas for improvements, please submit them
