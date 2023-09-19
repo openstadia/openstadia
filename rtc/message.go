@@ -2,6 +2,7 @@ package rtc
 
 import (
 	"encoding/binary"
+	"github.com/openstadia/openstadia/inputs/mouse"
 	"github.com/pion/webrtc/v3"
 	"math"
 )
@@ -43,8 +44,10 @@ func handleMessage(r *Rtc, d *webrtc.DataChannel, msg webrtc.DataChannelMessage)
 	case KeyboardUp:
 		r.keyboard.KeyUp(string(payload))
 	case MouseDown:
-		r.mouse.MouseDown()
+		button := mouse.Button(payload[0])
+		r.mouse.MouseDown(button)
 	case MouseUp:
-		r.mouse.MouseUp()
+		button := mouse.Button(payload[0])
+		r.mouse.MouseUp(button)
 	}
 }

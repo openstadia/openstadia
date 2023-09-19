@@ -114,16 +114,24 @@
         sendChannel.send(buffer)
     })
 
+    videoEl.addEventListener('contextmenu', event => event.preventDefault());
+
     videoEl.addEventListener('mousedown', (event) => {
         if (!sendChannel) {
             return;
         }
 
-        const buffer = new ArrayBuffer(4)
+        const buffer = new ArrayBuffer(8)
 
         const reportId = new Uint8Array(buffer, 0, 1)
         reportId[0] = 6;
+
+        const payload = new Uint8Array(buffer, 4, 1);
+        payload[0] = event.button
+
         sendChannel.send(buffer)
+
+        return false
     })
 
     videoEl.addEventListener('mouseup', (event) => {
@@ -131,11 +139,19 @@
             return;
         }
 
-        const buffer = new ArrayBuffer(4)
+        event.preventDefault()
+
+        const buffer = new ArrayBuffer(8)
 
         const reportId = new Uint8Array(buffer, 0, 1)
         reportId[0] = 7;
+
+        const payload = new Uint8Array(buffer, 4, 1);
+        payload[0] = event.button
+
         sendChannel.send(buffer)
+
+        return false
     })
 
     videoEl.addEventListener('wheel', (event) => {
@@ -161,7 +177,7 @@
             return;
         }
 
-        const key = event.key.toLowerCase()
+        const key = event.code
         const encoder = new TextEncoder()
         const payload = encoder.encode(key)
 
@@ -176,7 +192,7 @@
             return;
         }
 
-        const key = event.key.toLowerCase()
+        const key = event.code
         const encoder = new TextEncoder()
         const payload = encoder.encode(key)
 

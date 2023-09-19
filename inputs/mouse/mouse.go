@@ -4,14 +4,22 @@ import (
 	"github.com/go-vgo/robotgo"
 )
 
+type Button uint8
+
+const (
+	Left Button = iota
+	Center
+	Right
+)
+
 type Mouse interface {
 	Move(x int, y int)
 	MoveFloat(x float32, y float32)
 
 	Scroll(x int, y int)
 
-	MouseDown()
-	MouseUp()
+	MouseDown(button Button)
+	MouseUp(button Button)
 }
 
 type MouseImpl struct {
@@ -28,20 +36,6 @@ func (m *MouseImpl) MoveFloat(x float32, y float32) {
 
 func (m *MouseImpl) Move(x int, y int) {
 	robotgo.Move(x, y)
-}
-
-func (m *MouseImpl) MouseDown() {
-	err := robotgo.MouseDown()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (m *MouseImpl) MouseUp() {
-	err := robotgo.MouseUp()
-	if err != nil {
-		panic(err)
-	}
 }
 
 func (m *MouseImpl) Scroll(x int, y int) {

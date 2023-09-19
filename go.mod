@@ -6,6 +6,8 @@ require (
 	github.com/go-vgo/robotgo v1.0.0-rc2.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237
+	github.com/kirides/go-d3d v1.0.0
+	github.com/lxn/win v0.0.0-20210218163916-a377121e959e
 	github.com/openstadia/go-vigem v0.0.0-20230916110318-61277b75064a
 	github.com/pion/mediadevices v0.5.0
 	github.com/pion/webrtc/v3 v3.2.20
@@ -23,7 +25,6 @@ require (
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/jezek/xgb v1.1.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20230326075908-cb1d2100619a // indirect
-	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
 	github.com/otiai10/gosseract v2.2.1+incompatible // indirect
 	github.com/pion/datachannel v1.5.5 // indirect
 	github.com/pion/dtls/v2 v2.2.7 // indirect

@@ -1,13 +1,17 @@
-//go:build !linux && !d3d
+//go:build windows && d3d
 
 package screen
 
 import (
+	"errors"
 	"fmt"
+	"github.com/kirides/go-d3d/outputduplication"
+	"github.com/kirides/go-d3d/win"
 	"image"
 	"io"
 
 	"github.com/kbinani/screenshot"
+	"github.com/kirides/go-d3d/d3d11"
 	"github.com/pion/mediadevices/pkg/driver"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/io/video"
@@ -59,7 +63,32 @@ func (s *screen) Close() error {
 }
 
 func (s *screen) VideoRecord(selectedProp prop.Media) (video.Reader, error) {
-	rect := screenshot.GetDisplayBounds(s.displayIndex)
+	screenBounds := screenshot.GetDisplayBounds(s.displayIndex)
+
+	if win.IsValidDpiAwarenessContext(win.DpiAwarenessContextPerMonitorAwareV2) {
+		_, err := win.SetThreadDpiAwarenessContext(win.DpiAwarenessContextPerMonitorAwareV2)
+		if err != nil {
+			fmt.Printf("Could not set thread DPI awareness to PerMonitorAwareV2. %v\n", err)
+		} else {
+			fmt.Printf("Enabled PerMonitorAwareV2 DPI awareness.\n")
+		}
+	}
+
+	device, deviceCtx, err := d3d11.NewD3D11Device()
+	if err != nil {
+		fmt.Printf("Could not create D3D11 Device. %v\n", err)
+		return nil, err
+	}
+
+	ddup, err := outputduplication.NewIDXGIOutputDuplication(device, deviceCtx, uint(s.displayIndex))
+	if err != nil {
+		fmt.Printf("Err NewIDXGIOutputDuplication: %v\n", err)
+		return nil, err
+	}
+
+	ddup.DrawPointer = true
+
+	imgBuf := image.NewRGBA(screenBounds)
 
 	r := video.ReaderFunc(func() (img image.Image, release func(), err error) {
 		select {
@@ -68,7 +97,13 @@ func (s *screen) VideoRecord(selectedProp prop.Media) (video.Reader, error) {
 		default:
 		}
 
-		img, err = screenshot.Capture(rect.Min.X, rect.Min.Y, rect.Dx(), rect.Dy())
+		err = ddup.GetImage(imgBuf, 0)
+		if err != nil && !errors.Is(err, outputduplication.ErrNoImageYet) {
+			fmt.Printf("Err ddup.GetImage: %v\n", err)
+			//return nil, nil, err
+		}
+		err = nil
+		img = imgBuf
 		release = func() {}
 		return
 	})

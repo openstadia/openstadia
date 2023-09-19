@@ -29,6 +29,7 @@ func getCodecParams(offer o.Offer) codec.VideoEncoderBuilder {
 	case o.Openh264:
 		openh264params, err := openh264.NewParams()
 		openh264params.BitRate = offer.Codec.BitRate
+		openh264params.SliceSizeConstraint = 20000
 		if err != nil {
 			panic(err)
 		}

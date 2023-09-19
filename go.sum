@@ -46,6 +46,8 @@ github.com/jezek/xgb v1.1.0/go.mod h1:nrhwO0FX/enq75I7Y7G8iN1ubpSGZEiA3v9e9GyRFl
 github.com/kbinani/screenshot v0.0.0-20210720154843-7d3a670d8329/go.mod h1:2VPVQDR4wO7KXHwP+DAypEy67rXf+okUx2zjgpCxZw4=
 github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237 h1:YOp8St+CM/AQ9Vp4XYm4272E77MptJDHkwypQHIRl9Q=
 github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237/go.mod h1:e7qQlOY68wOz4b82D7n+DdaptZAi+SHW0+yKiWZzEYE=
+github.com/kirides/go-d3d v1.0.0 h1:i1XycQ+8KCZqToyGq7o6I92EwcJDXgIICSVjLhmHuaM=
+github.com/kirides/go-d3d v1.0.0/go.mod h1:KUNIIJoB+psyPedDBv8TY4gKXmPJT3K1+F2nL2pKDPQ=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.2.1 h1:Fmg33tUaq4/8ym9TJN1x7sLJnHVwhP33CNkpYV/7rwI=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
@@ -66,8 +68,6 @@ github.com/onsi/ginkgo v1.16.5/go.mod h1:+E8gABHa3K6zRBolWtd+ROzc/U5bkGt0FwiG042
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
-github.com/openstadia/go-vigem v0.0.0-20230829141359-91a7ad011a43 h1:oinS07Y3otPQQtNhP3MlO9SVAT9PruRdrak5WeB7S2A=
-github.com/openstadia/go-vigem v0.0.0-20230829141359-91a7ad011a43/go.mod h1:Gzd9Xtz6AH44tm5Az1mCGYZCp8VSRIFpKUMY2lBdep8=
 github.com/openstadia/go-vigem v0.0.0-20230916110318-61277b75064a h1:KVFZSI5tGzK5AuSQn0z6F3jK15ZmyF6JhfuzktsjzCQ=
 github.com/openstadia/go-vigem v0.0.0-20230916110318-61277b75064a/go.mod h1:Gzd9Xtz6AH44tm5Az1mCGYZCp8VSRIFpKUMY2lBdep8=
 github.com/otiai10/gosseract v2.2.1+incompatible h1:Ry5ltVdpdp4LAa2bMjsSJH34XHVOV7XMi41HtzL8X2I=

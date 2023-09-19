@@ -111,7 +111,7 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 	//markerEnable := false
 	//marker := false
 
-	//scale := video.Scale(640, 480, video.ScalerFastNearestNeighbor)
+	//scale := video.Scale(1080, 720, video.ScalerFastNearestNeighbor)
 
 	peerConnection.OnDataChannel(func(d *webrtc.DataChannel) {
 		fmt.Printf("New DataChannel %s %d\n", d.Label(), d.ID())
