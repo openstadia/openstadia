@@ -16,7 +16,21 @@
 
         video {
             display: block;
+        }
+
+        #videoWrapper {
+            display: flex;
+            justify-content: center;
             width: 1000px;
+        }
+
+        #videoWrapper:fullscreen video {
+            object-fit: contain;
+        }
+
+        #videoWrapper:not(:fullscreen) video {
+            width: 100%;
+            height: 100%;
         }
 
         h3 {
@@ -50,7 +64,7 @@
 <button id="start">Start HTTP Session</button>
 
 <h3>Video</h3>
-<div id="remoteVideos">
+<div id="videoWrapper">
     <video autoplay id="video"></video>
 </div>
 
@@ -64,6 +78,7 @@
     const videoEl = document.querySelector('#video');
     const fullscreen = document.querySelector('#fullscreen');
     const startEl = document.querySelector('#start');
+    const videoWrapper = document.querySelector('#videoWrapper');
 
     let sendChannel;
 
@@ -75,7 +90,7 @@
 
     function enterFullScreen() {
         if (!document.fullscreenElement) {
-            videoEl.requestFullscreen();
+            videoWrapper.requestFullscreen();
         }
     }
 
@@ -160,6 +175,7 @@
         }
 
         event.preventDefault()
+        console.log(event)
 
         const buffer = new ArrayBuffer(12)
 
@@ -167,8 +183,8 @@
         reportId[0] = 2;
 
         const data = new Int32Array(buffer, 4, 2);
-        data[1] = event.deltaX
-        data[2] = event.deltaY
+        data[0] = event.deltaX
+        data[1] = event.deltaY
         sendChannel.send(buffer)
     })
 

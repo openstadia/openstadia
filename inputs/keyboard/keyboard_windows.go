@@ -21,8 +21,7 @@ func (k *KeyboardImpl) KeyDown(key string) {
 	}
 
 	err := SendKeydbInput(win.KEYBDINPUT{
-		WVk:     virtualKey,
-		DwFlags: 2,
+		WVk: virtualKey,
 	})
 	if err != nil {
 		panic(err)
@@ -38,7 +37,7 @@ func (k *KeyboardImpl) KeyUp(key string) {
 
 	err := SendKeydbInput(win.KEYBDINPUT{
 		WVk:     virtualKey,
-		DwFlags: 2,
+		DwFlags: win.KEYEVENTF_KEYUP,
 	})
 	if err != nil {
 		panic(err)

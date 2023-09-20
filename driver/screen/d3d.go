@@ -86,7 +86,8 @@ func (s *screen) VideoRecord(selectedProp prop.Media) (video.Reader, error) {
 		return nil, err
 	}
 
-	ddup.DrawPointer = true
+	// TODO Add support for mouse enable
+	//ddup.DrawPointer = true
 
 	imgBuf := image.NewRGBA(screenBounds)
 
