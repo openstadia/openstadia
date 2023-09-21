@@ -7,18 +7,15 @@ import (
 import X360 "github.com/openstadia/go-vigem/x360"
 
 type vGamepad struct {
-	name   []byte
 	client *vigem.ClientImpl
 	x360   *X360.Gamepad
 }
 
-// CreateGamepad will create a new gamepad using the given uinput
-// device path of the uinput device.
-func CreateGamepad(path string, name []byte, vendor uint16, product uint16) (Gamepad, error) {
+func CreateGamepad() (Gamepad, error) {
 	client := vigem.NewClient()
 	x360 := X360.NewGamepad(client)
 	x360.Connect()
-	return &vGamepad{name: name, client: client, x360: x360}, nil
+	return &vGamepad{client: client, x360: x360}, nil
 }
 
 var buttonsMap = map[int]uint16{

@@ -103,6 +103,9 @@ func (m *MouseImpl) MoveFloat(x float32, y float32) {
 	}
 }
 
+func (m *MouseImpl) Update() {
+}
+
 func SendMouseInput(input win.MOUSEINPUT) error {
 	m := win.MOUSE_INPUT{
 		Type: win.INPUT_MOUSE,

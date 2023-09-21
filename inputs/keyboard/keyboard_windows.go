@@ -44,6 +44,9 @@ func (k *KeyboardImpl) KeyUp(key string) {
 	}
 }
 
+func (k *KeyboardImpl) Update() {
+}
+
 func SendKeydbInput(input win.KEYBDINPUT) error {
 	k := win.KEYBD_INPUT{
 		Type: win.INPUT_KEYBOARD,

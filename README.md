@@ -32,7 +32,7 @@ OpenStadia currently supports the following operating system:
 |------------------|-----------------|-----------------|-----------------|-----------------|
 | Video Capture    | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
 | Mouse Capture    | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
-| Keyboard Capture | :yellow_circle: | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Keyboard Capture | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
 | Gamepad Capture  | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
 | Virtual Display  | :green_circle:  | :purple_circle: | :red_circle:    | :black_circle:  |
 | Virtual Drive    | :purple_circle: | :purple_circle: | :purple_circle: | :purple_circle: |
