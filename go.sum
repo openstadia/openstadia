@@ -68,6 +68,8 @@ github.com/onsi/ginkgo v1.16.5/go.mod h1:+E8gABHa3K6zRBolWtd+ROzc/U5bkGt0FwiG042
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
+github.com/openstadia/go-uinput v0.0.0-20230921083625-6226d8903b03 h1:i9F2LomH9XeqxSn5k1Gs4pAsHKyuq2RgATbo5a0+jhI=
+github.com/openstadia/go-uinput v0.0.0-20230921083625-6226d8903b03/go.mod h1:HlR2ul1YwdIfpYhMsHdeys5LhAWxgIEmzk9bFL7nI+M=
 github.com/openstadia/go-vigem v0.0.0-20230916110318-61277b75064a h1:KVFZSI5tGzK5AuSQn0z6F3jK15ZmyF6JhfuzktsjzCQ=
 github.com/openstadia/go-vigem v0.0.0-20230916110318-61277b75064a/go.mod h1:Gzd9Xtz6AH44tm5Az1mCGYZCp8VSRIFpKUMY2lBdep8=
 github.com/otiai10/gosseract v2.2.1+incompatible h1:Ry5ltVdpdp4LAa2bMjsSJH34XHVOV7XMi41HtzL8X2I=

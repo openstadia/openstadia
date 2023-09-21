@@ -30,7 +30,7 @@ func main() {
 	var gamepad_ g.Gamepad
 
 	if remoteGamepad {
-		gamepad, err := g.CreateGamepad("/dev/uinput", []byte("Xbox One Wireless Controller"), 0x045E, 0x02EA)
+		gamepad, err := g.CreateGamepad()
 		if err != nil {
 			panic(err)
 		}

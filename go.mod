@@ -8,6 +8,7 @@ require (
 	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237
 	github.com/kirides/go-d3d v1.0.0
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e
+	github.com/openstadia/go-uinput v0.0.0-20230921083625-6226d8903b03
 	github.com/openstadia/go-vigem v0.0.0-20230916110318-61277b75064a
 	github.com/pion/mediadevices v0.5.0
 	github.com/pion/webrtc/v3 v3.2.20
