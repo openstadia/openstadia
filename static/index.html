@@ -21,10 +21,13 @@
         #videoWrapper {
             display: flex;
             justify-content: center;
+            align-items: center;
             width: 1000px;
         }
 
         #videoWrapper:fullscreen video {
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
         }
 
@@ -193,6 +196,8 @@
             return;
         }
 
+        event.preventDefault()
+
         const key = event.code
         const encoder = new TextEncoder()
         const payload = encoder.encode(key)
@@ -207,6 +212,8 @@
         if (!sendChannel) {
             return;
         }
+
+        event.preventDefault()
 
         const key = event.code
         const encoder = new TextEncoder()

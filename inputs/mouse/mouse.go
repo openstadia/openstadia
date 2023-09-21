@@ -16,4 +16,6 @@ type Mouse interface {
 
 	MouseDown(button Button)
 	MouseUp(button Button)
+
+	Update()
 }

@@ -31,23 +31,29 @@ func handleMessage(r *Rtc, d *webrtc.DataChannel, msg webrtc.DataChannelMessage)
 		x := math.Float32frombits(binary.LittleEndian.Uint32(payload[0:]))
 		y := math.Float32frombits(binary.LittleEndian.Uint32(payload[4:]))
 		r.mouse.MoveFloat(x, y)
+		r.mouse.Update()
 	case MouseScroll:
 		x := binary.LittleEndian.Uint32(payload[0:])
 		y := binary.LittleEndian.Uint32(payload[4:])
 		r.mouse.Scroll(int(x), int(y))
+		r.mouse.Update()
 	case GamepadId:
 		if r.gamepad != nil {
 			parseGamepadData(r.gamepad, payload)
 		}
 	case KeyboardDown:
 		r.keyboard.KeyDown(string(payload))
+		r.keyboard.Update()
 	case KeyboardUp:
 		r.keyboard.KeyUp(string(payload))
+		r.keyboard.Update()
 	case MouseDown:
 		button := mouse.Button(payload[0])
 		r.mouse.MouseDown(button)
+		r.mouse.Update()
 	case MouseUp:
 		button := mouse.Button(payload[0])
 		r.mouse.MouseUp(button)
+		r.mouse.Update()
 	}
 }

@@ -6,20 +6,11 @@ import (
 )
 
 type vGamepad struct {
-	*uinput.UinputDevice
+	*uinput.Device
 }
 
 func CreateGamepad() (Gamepad, error) {
-	path := "/dev/uinput"
-
-	info := uinput.DeviceInfo{
-		Name:    "Xbox One Wireless Controller",
-		Vendor:  0x045E,
-		Product: 0x02EA,
-		Version: 0x0301,
-	}
-
-	device, err := createGamepadUinputDevice(path, info)
+	device, err := createGamepadUinputDevice()
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +57,8 @@ func (vg *vGamepad) LeftStick(x float32, y float32) error {
 
 func (vg *vGamepad) RightStick(x float32, y float32) error {
 	values := map[uint16]float32{}
-	values[uinput.AbsRX] = x
-	values[uinput.AbsRY] = y
+	values[uinput.AbsRx] = x
+	values[uinput.AbsRy] = y
 
 	return vg.sendStickEvent(values)
 }
@@ -77,13 +68,13 @@ func (vg *vGamepad) LeftTrigger(value float32) error {
 }
 
 func (vg *vGamepad) RightTrigger(value float32) error {
-	return vg.sendTriggerEvent(uinput.AbsRZ, value)
+	return vg.sendTriggerEvent(uinput.AbsRz, value)
 }
 
 func (vg *vGamepad) Update() {
 	err := vg.SendSyncEvent()
 	if err != nil {
-		panic(err)
+		return
 	}
 }
 
@@ -153,16 +144,16 @@ func (vg *vGamepad) sendHatEvent(direction HatDirection, action HatAction) error
 
 	switch direction {
 	case HatUp:
-		event = uinput.AbsHat0Y
+		event = uinput.AbsHat0y
 		value = -MaximumAxisValue
 	case HatDown:
-		event = uinput.AbsHat0Y
+		event = uinput.AbsHat0y
 		value = MaximumAxisValue
 	case HatLeft:
-		event = uinput.AbsHat0X
+		event = uinput.AbsHat0x
 		value = -MaximumAxisValue
 	case HatRight:
-		event = uinput.AbsHat0X
+		event = uinput.AbsHat0x
 		value = MaximumAxisValue
 	default:
 		{
@@ -187,11 +178,20 @@ func (vg *vGamepad) sendTriggerEvent(absCode uint16, value float32) error {
 }
 
 func (vg *vGamepad) Close() error {
-	return vg.Close()
+	return vg.Device.CloseDevice()
 }
 
-func createGamepadUinputDevice(path string, info uinput.DeviceInfo) (device *uinput.UinputDevice, err error) {
-	keys := []uinput.KeyEvent{
+func createGamepadUinputDevice() (device *uinput.Device, err error) {
+	path := "/dev/uinput"
+
+	info := uinput.DeviceInfo{
+		Name:    "Xbox One Wireless Controller",
+		Vendor:  0x045E,
+		Product: 0x02EA,
+		Version: 0x0301,
+	}
+
+	keyEvents := []uint16{
 		uinput.ButtonGamepad,
 
 		uinput.ButtonSouth,
@@ -211,18 +211,21 @@ func createGamepadUinputDevice(path string, info uinput.DeviceInfo) (device *uin
 		uinput.ButtonThumbRight,
 	}
 
-	absEvents := []uinput.AbsEvent{
+	absEvents := []uint16{
 		uinput.AbsX,
 		uinput.AbsY,
 		uinput.AbsZ,
-		uinput.AbsRX,
-		uinput.AbsRY,
-		uinput.AbsRZ,
-		uinput.AbsHat0X,
-		uinput.AbsHat0Y,
+		uinput.AbsRx,
+		uinput.AbsRy,
+		uinput.AbsRz,
+		uinput.AbsHat0x,
+		uinput.AbsHat0y,
 	}
 
-	return uinput.CreateUinputDevice(path, info, keys, absEvents)
+	var absMax [64]int32
+	var absMin [64]int32
+
+	return uinput.CreateDevice(path, info, keyEvents, absEvents, nil, absMax, absMin)
 }
 
 func isHatButton(button int) bool {
