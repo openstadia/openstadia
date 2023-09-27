@@ -5,22 +5,23 @@ package screen
 import (
 	"errors"
 	"fmt"
-	"github.com/kirides/go-d3d/outputduplication"
-	"github.com/kirides/go-d3d/win"
-	"image"
-	"io"
-
 	"github.com/kbinani/screenshot"
 	"github.com/kirides/go-d3d/d3d11"
+	"github.com/kirides/go-d3d/outputduplication"
+	"github.com/kirides/go-d3d/win"
 	"github.com/pion/mediadevices/pkg/driver"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pion/mediadevices/pkg/prop"
+	"image"
 )
 
 type screen struct {
 	displayIndex int
-	doneCh       chan struct{}
+	device       *d3d11.ID3D11Device
+	deviceCtx    *d3d11.ID3D11DeviceContext
+	ddup         *outputduplication.OutputDuplicator
+	imgBuf       *image.RGBA
 }
 
 func init() {
@@ -53,16 +54,6 @@ func newScreen(displayIndex int) *screen {
 }
 
 func (s *screen) Open() error {
-	s.doneCh = make(chan struct{})
-	return nil
-}
-
-func (s *screen) Close() error {
-	close(s.doneCh)
-	return nil
-}
-
-func (s *screen) VideoRecord(selectedProp prop.Media) (video.Reader, error) {
 	screenBounds := screenshot.GetDisplayBounds(s.displayIndex)
 
 	if win.IsValidDpiAwarenessContext(win.DpiAwarenessContextPerMonitorAwareV2) {
@@ -77,13 +68,13 @@ func (s *screen) VideoRecord(selectedProp prop.Media) (video.Reader, error) {
 	device, deviceCtx, err := d3d11.NewD3D11Device()
 	if err != nil {
 		fmt.Printf("Could not create D3D11 Device. %v\n", err)
-		return nil, err
+		return err
 	}
 
 	ddup, err := outputduplication.NewIDXGIOutputDuplication(device, deviceCtx, uint(s.displayIndex))
 	if err != nil {
 		fmt.Printf("Err NewIDXGIOutputDuplication: %v\n", err)
-		return nil, err
+		return err
 	}
 
 	// TODO Add support for mouse enable
@@ -91,20 +82,30 @@ func (s *screen) VideoRecord(selectedProp prop.Media) (video.Reader, error) {
 
 	imgBuf := image.NewRGBA(screenBounds)
 
-	r := video.ReaderFunc(func() (img image.Image, release func(), err error) {
-		select {
-		case <-s.doneCh:
-			return nil, nil, io.EOF
-		default:
-		}
+	s.device = device
+	s.deviceCtx = deviceCtx
+	s.ddup = ddup
+	s.imgBuf = imgBuf
+	return nil
+}
 
-		err = ddup.GetImage(imgBuf, 0)
+func (s *screen) Close() error {
+	s.ddup.Release()
+	s.deviceCtx.Release()
+	s.device.Release()
+
+	return nil
+}
+
+func (s *screen) VideoRecord(selectedProp prop.Media) (video.Reader, error) {
+	r := video.ReaderFunc(func() (img image.Image, release func(), err error) {
+		err = s.ddup.GetImage(s.imgBuf, 0)
 		if err != nil && !errors.Is(err, outputduplication.ErrNoImageYet) {
 			fmt.Printf("Err ddup.GetImage: %v\n", err)
-			//return nil, nil, err
+			return nil, nil, err
 		}
 		err = nil
-		img = imgBuf
+		img = s.imgBuf
 		release = func() {}
 		return
 	})

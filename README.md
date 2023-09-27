@@ -31,6 +31,7 @@ OpenStadia currently supports the following operating system:
 |                  | Linux           | Windows         | macOS           | External Device |
 |------------------|-----------------|-----------------|-----------------|-----------------|
 | Video Capture    | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Audio Capture    | :yellow_circle: | :yellow_circle: | :purple_circle: | :yellow_circle: |
 | Mouse Capture    | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
 | Keyboard Capture | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
 | Gamepad Capture  | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
@@ -139,6 +140,11 @@ go build
 
 1. Install MSYS2 on your system by following the official documentation: [Installing MSYS2](https://www.msys2.org/).
 2. Open MSYS2 UCRT64 console
+
+```shell
+C:/msys64/msys2_shell.cmd -defterm -here -no-start -ucrt64
+```
+
 3. Install build requirements
 
 ```shell
@@ -147,17 +153,10 @@ pacman -S mingw-w64-ucrt-x86_64-libvpx
 pacman -S mingw-w64-ucrt-x86_64-libpng
 ```
 
-4. Set environment variables and navigate to the project directory
+4. Build the OpenStadia application using the following command:
 
 ```shell
-export PATH=$PATH:/c/Go/bin
-cd /c/path-to-openstadia/openstadia/
-```
-
-5. Build the OpenStadia application using the following command:
-
-```shell
-go build -v -x
+.\build.ps1
 ```
 
 ### Launching

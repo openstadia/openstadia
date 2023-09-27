@@ -2,11 +2,16 @@ package application
 
 import (
 	"github.com/pion/mediadevices"
-	_ "github.com/pion/mediadevices/pkg/driver/camera"
-	_ "github.com/pion/mediadevices/pkg/driver/microphone"
+	"github.com/pion/mediadevices/pkg/driver/camera"
+	"github.com/pion/mediadevices/pkg/driver/microphone"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/prop"
 )
+
+func CameraInitialize() {
+	camera.Initialize()
+	microphone.Initialize()
+}
 
 type cameraApp struct {
 }

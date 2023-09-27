@@ -5,12 +5,12 @@ import (
 	"github.com/openstadia/openstadia/application"
 	c "github.com/openstadia/openstadia/config"
 	"github.com/openstadia/openstadia/display"
-	_ "github.com/openstadia/openstadia/driver/screen"
 	"github.com/openstadia/openstadia/inputs/gamepad"
 	"github.com/openstadia/openstadia/inputs/keyboard"
 	"github.com/openstadia/openstadia/inputs/mouse"
 	o "github.com/openstadia/openstadia/offer"
 	"github.com/pion/mediadevices"
+	"github.com/pion/mediadevices/pkg/codec/opus"
 	"github.com/pion/webrtc/v3"
 	"time"
 )
@@ -42,8 +42,14 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 
 	codecParams := getCodecParams(offer)
 
+	opusParams, err := opus.NewParams()
+	if err != nil {
+		panic(err)
+	}
+
 	codecSelector := mediadevices.NewCodecSelector(
 		mediadevices.WithVideoEncoders(codecParams),
+		mediadevices.WithAudioEncoders(&opusParams),
 	)
 
 	mediaEngine := webrtc.MediaEngine{}
@@ -133,31 +139,34 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 		panic(err)
 	}
 
-	track := s.GetVideoTracks()[0]
-	switch v := track.(type) {
-	case *mediadevices.VideoTrack:
-		//if markerEnable {
-		//	mark := Mark(&marker)
-		//	v.Transform(mark)
-		//}
+	//track := s.GetVideoTracks()[0]
+	//switch v := track.(type) {
+	//case *mediadevices.VideoTrack:
+	//	//if markerEnable {
+	//	//	mark := Mark(&marker)
+	//	//	v.Transform(mark)
+	//	//}
+	//
+	//	r.track = v
+	//default:
+	//	fmt.Printf("unexpected type %T\n", v)
+	//}
 
-		r.track = v
-	default:
-		fmt.Printf("unexpected type %T\n", v)
-	}
+	for _, track := range s.GetTracks() {
+		fmt.Printf("Track %#v\n", track)
+		track.OnEnded(func(err error) {
+			fmt.Printf("Track (ID: %s) ended with error: %v\n",
+				track.ID(), err)
+		})
 
-	track.OnEnded(func(err error) {
-		fmt.Printf("Track (ID: %s) ended with error: %v\n",
-			track.ID(), err)
-	})
-
-	_, err = peerConnection.AddTransceiverFromTrack(track,
-		webrtc.RTPTransceiverInit{
-			Direction: webrtc.RTPTransceiverDirectionSendonly,
-		},
-	)
-	if err != nil {
-		panic(err)
+		_, err = peerConnection.AddTransceiverFromTrack(track,
+			webrtc.RTPTransceiverInit{
+				Direction: webrtc.RTPTransceiverDirectionSendonly,
+			},
+		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Set the remote SessionDescription

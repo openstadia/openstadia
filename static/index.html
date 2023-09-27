@@ -70,6 +70,7 @@
 <div id="videoWrapper">
     <video autoplay id="video"></video>
 </div>
+<audio id="audio"></audio>
 
 <button id="fullscreen">Enter fullscreen</button>
 
@@ -79,6 +80,7 @@
 
 <script>
     const videoEl = document.querySelector('#video');
+    const audioEl = document.querySelector('#audio');
     const fullscreen = document.querySelector('#fullscreen');
     const startEl = document.querySelector('#start');
     const videoWrapper = document.querySelector('#videoWrapper');
@@ -105,7 +107,18 @@
 
     pc.addEventListener('track', (event) => {
         console.log(event)
-        videoEl.srcObject = event.streams[0]
+        if (event.track.kind === "video") {
+            videoEl.srcObject = event.streams[0]
+        }
+
+        if (event.track.kind === "audio") {
+            console.log("AUDIO", event.streams[0])
+
+            audioEl.srcObject = event.streams[0]
+            audioEl.autoplay = true
+            audioEl.controls = true
+        }
+
     })
 
     videoEl.addEventListener('mousemove', (event) => {
@@ -227,10 +240,8 @@
 
     pc.addEventListener('iceconnectionstatechange', e => log(pc.iceConnectionState))
 
-    // Offer to receive 1 video track
-    pc.addTransceiver('video', {
-        'direction': 'recvonly'
-    })
+    pc.addTransceiver('video', {direction: 'recvonly'});
+    pc.addTransceiver('audio', {direction: 'recvonly'});
 
     const startHttpSession = async () => {
         sendChannel = pc.createDataChannel('sendDataChannel');
