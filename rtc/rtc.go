@@ -42,6 +42,7 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 
 	codecParams := getCodecParams(offer)
 
+	// TODO Add check for audio requires
 	opusParams, err := opus.NewParams()
 	if err != nil {
 		panic(err)

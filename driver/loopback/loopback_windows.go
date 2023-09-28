@@ -52,7 +52,8 @@ func Initialize() {
 
 	var err error
 	ctx, err = malgo.InitContext(backends, malgo.ContextConfig{}, func(message string) {
-		log.Printf("Playback device message: %s\n", message)
+		// TODO Add debug logging
+		//log.Printf("Playback device message: %s\n", message)
 	})
 	if err != nil {
 		panic(err)

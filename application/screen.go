@@ -2,8 +2,8 @@ package application
 
 import (
 	"github.com/openstadia/openstadia/driver/loopback"
+	"github.com/openstadia/openstadia/driver/screen"
 	"github.com/pion/mediadevices"
-	"github.com/pion/mediadevices/pkg/driver/camera"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/prop"
 	_ "unsafe"
@@ -16,7 +16,7 @@ func selectScreen(constraints mediadevices.MediaTrackConstraints, selector *medi
 func selectAudio(constraints mediadevices.MediaTrackConstraints, selector *mediadevices.CodecSelector) (mediadevices.Track, error)
 
 func ScreenInitialize() {
-	camera.Initialize()
+	screen.Initialize()
 	loopback.Initialize()
 }
 
@@ -43,8 +43,9 @@ func (s *screenApp) GetMedia(codecSelector *mediadevices.CodecSelector) (mediade
 			c.Height = prop.Int(480)
 			c.FrameRate = prop.Float(30)
 		},
-		Audio: func(c *mediadevices.MediaTrackConstraints) {
-		},
+		// TODO Add check for audio requires
+		//Audio: func(c *mediadevices.MediaTrackConstraints) {
+		//},
 		Codec: codecSelector,
 	})
 }
