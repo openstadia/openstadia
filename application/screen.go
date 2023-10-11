@@ -1,8 +1,6 @@
 package application
 
 import (
-	"github.com/openstadia/openstadia/driver/loopback"
-	"github.com/openstadia/openstadia/driver/screen"
 	"github.com/pion/mediadevices"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/prop"
@@ -14,11 +12,6 @@ func selectScreen(constraints mediadevices.MediaTrackConstraints, selector *medi
 
 //go:linkname selectAudio github.com/pion/mediadevices.selectAudio
 func selectAudio(constraints mediadevices.MediaTrackConstraints, selector *mediadevices.CodecSelector) (mediadevices.Track, error)
-
-func ScreenInitialize() {
-	screen.Initialize()
-	loopback.Initialize()
-}
 
 type screenApp struct {
 }

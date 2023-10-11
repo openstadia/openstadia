@@ -25,7 +25,7 @@ func New(config *config.Openstadia, rtc *rtc.Rtc) *Hub {
 }
 
 func (h *Hub) Start(interrupt <-chan os.Signal) {
-	u := url.URL{Scheme: "ws", Host: h.config.Hub.Addr, Path: "/ws/"}
+	u := url.URL{Scheme: "wss", Host: h.config.Hub.Addr, Path: "/ws/"}
 	log.Printf("connecting to %s", u.String())
 
 	requestHeader := http.Header{}

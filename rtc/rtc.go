@@ -17,7 +17,7 @@ import (
 
 type Rtc struct {
 	config   *c.Openstadia
-	track    *mediadevices.VideoTrack
+	tracks   []mediadevices.Track
 	mouse    mouse.Mouse
 	keyboard keyboard.Keyboard
 	gamepad  gamepad.Gamepad
@@ -28,7 +28,7 @@ func New(config *c.Openstadia, mouse mouse.Mouse, keyboard keyboard.Keyboard, ga
 }
 
 func (r *Rtc) IsBusy() bool {
-	return r.track != nil
+	return r.tracks != nil
 }
 
 func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
@@ -95,9 +95,11 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 				fmt.Println(closeErr)
 			}
 		} else if state == webrtc.PeerConnectionStateClosed {
-			closeErr := r.track.Close()
-			if closeErr != nil {
-				panic(closeErr)
+			for _, track := range r.tracks {
+				closeErr := track.Close()
+				if closeErr != nil {
+					panic(closeErr)
+				}
 			}
 
 			if display_ != nil {
@@ -105,7 +107,7 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 			}
 
 			app.Stop()
-			r.track = nil
+			r.tracks = nil
 		}
 	})
 
@@ -168,6 +170,8 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 		if err != nil {
 			panic(err)
 		}
+
+		r.tracks = append(r.tracks, track)
 	}
 
 	// Set the remote SessionDescription

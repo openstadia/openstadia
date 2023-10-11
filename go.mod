@@ -18,6 +18,7 @@ require (
 )
 
 require (
+	github.com/blackjack/webcam v0.0.0-20230509180125-87693b3f29dc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gen2brain/shm v0.0.0-20230802011745-f2460f5984f7 // indirect
 	github.com/google/uuid v1.3.1 // indirect
