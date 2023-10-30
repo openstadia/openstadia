@@ -2,9 +2,9 @@ package hub
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/openstadia/openstadia/config"
 	p "github.com/openstadia/openstadia/packet"
 	"github.com/openstadia/openstadia/rtc"
+	s "github.com/openstadia/openstadia/store"
 	"log"
 	"net/http"
 	"net/url"
@@ -13,27 +13,28 @@ import (
 )
 
 type Hub struct {
-	config *config.Openstadia
-	rtc    *rtc.Rtc
+	store *s.Store
+	rtc   *rtc.Rtc
 }
 
-func New(config *config.Openstadia, rtc *rtc.Rtc) *Hub {
+func New(store *s.Store, rtc *rtc.Rtc) *Hub {
 	return &Hub{
-		config: config,
-		rtc:    rtc,
+		store: store,
+		rtc:   rtc,
 	}
 }
 
 func (h *Hub) Start(interrupt <-chan os.Signal) {
-	u := url.URL{Scheme: "wss", Host: h.config.Hub.Addr, Path: "/ws/"}
+	u := url.URL{Scheme: "wss", Host: h.store.Hub().Addr, Path: "/ws/"}
 	log.Printf("connecting to %s", u.String())
 
 	requestHeader := http.Header{}
-	requestHeader.Add("Authorization", h.config.Hub.Token)
+	requestHeader.Add("Authorization", h.store.Hub().Token)
 
 	connection, _, err := websocket.DefaultDialer.Dial(u.String(), requestHeader)
 	if err != nil {
-		log.Fatal("dial:", err)
+		log.Println("dial:", err)
+		return
 	}
 	defer connection.Close()
 
@@ -58,7 +59,7 @@ func (h *Hub) Start(interrupt <-chan os.Signal) {
 			if header.Name == "OFFER" {
 				go handleOffer(connection, message, h.rtc)
 			} else if header.Name == "APPS" {
-				go handleApps(connection, &header, h.config)
+				go handleApps(connection, &header, h.store)
 			}
 
 		}

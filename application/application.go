@@ -11,6 +11,6 @@ type Application interface {
 	GetMedia(codecSelector *mediadevices.CodecSelector) (mediadevices.MediaStream, error)
 }
 
-func IsScreen(app *config.App) bool {
+func IsScreen(app *config.DbApp) bool {
 	return app.Name == "screen"
 }

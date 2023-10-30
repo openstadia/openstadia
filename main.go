@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	c "github.com/openstadia/openstadia/config"
 	h "github.com/openstadia/openstadia/hub"
@@ -9,6 +10,9 @@ import (
 	"github.com/openstadia/openstadia/inputs/mouse"
 	l "github.com/openstadia/openstadia/local"
 	r "github.com/openstadia/openstadia/rtc"
+	"github.com/openstadia/openstadia/runtime"
+	s "github.com/openstadia/openstadia/store"
+	"log"
 	"os"
 	"os/signal"
 )
@@ -21,10 +25,20 @@ import (
 func main() {
 	config, err := c.Load()
 	if err != nil {
-		panic(err)
+		if errors.Is(err, c.ErrNoConfigFile) {
+			fmt.Println("Config file not found")
+		} else {
+			log.Fatal(err)
+		}
 	}
-
 	fmt.Printf("Config %#v\n", config)
+
+	store, err := s.CreateStore()
+	if err != nil {
+		log.Fatal(err)
+	}
+	store.SetConfig(config)
+	fmt.Printf("Store %#v\n", store.Config())
 
 	remoteGamepad := true
 	var gamepad_ g.Gamepad
@@ -53,20 +67,20 @@ func main() {
 		panic(err)
 	}
 
-	rtc := r.New(config, mouse_, keyboard_, gamepad_)
-	local := l.New(config, rtc)
-	hub := h.New(config, rtc)
+	rtc := r.New(store, mouse_, keyboard_, gamepad_)
+	local := l.New(store, rtc)
+	hub := h.New(store, rtc)
 
-	if config.Hub != nil {
+	if store.Hub() != nil {
 		interrupt := make(chan os.Signal, 1)
 		signal.Notify(interrupt, os.Interrupt)
 
 		go hub.Start(interrupt)
 	}
 
-	if config.Local != nil {
+	if store.Local() != nil {
 		go local.ServeHttp()
 	}
 
-	select {}
+	runtime.Run(store)
 }

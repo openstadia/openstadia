@@ -3,12 +3,12 @@ package rtc
 import (
 	"fmt"
 	"github.com/openstadia/openstadia/application"
-	c "github.com/openstadia/openstadia/config"
 	"github.com/openstadia/openstadia/display"
 	"github.com/openstadia/openstadia/inputs/gamepad"
 	"github.com/openstadia/openstadia/inputs/keyboard"
 	"github.com/openstadia/openstadia/inputs/mouse"
 	o "github.com/openstadia/openstadia/offer"
+	s "github.com/openstadia/openstadia/store"
 	"github.com/pion/mediadevices"
 	"github.com/pion/mediadevices/pkg/codec/opus"
 	"github.com/pion/webrtc/v3"
@@ -16,15 +16,15 @@ import (
 )
 
 type Rtc struct {
-	config   *c.Openstadia
+	store    *s.Store
 	tracks   []mediadevices.Track
 	mouse    mouse.Mouse
 	keyboard keyboard.Keyboard
 	gamepad  gamepad.Gamepad
 }
 
-func New(config *c.Openstadia, mouse mouse.Mouse, keyboard keyboard.Keyboard, gamepad gamepad.Gamepad) *Rtc {
-	return &Rtc{config: config, mouse: mouse, keyboard: keyboard, gamepad: gamepad}
+func New(store *s.Store, mouse mouse.Mouse, keyboard keyboard.Keyboard, gamepad gamepad.Gamepad) *Rtc {
+	return &Rtc{store: store, mouse: mouse, keyboard: keyboard, gamepad: gamepad}
 }
 
 func (r *Rtc) IsBusy() bool {
@@ -62,7 +62,7 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 	}
 
 	name := offer.App.Name
-	appConfig, err := r.config.GetAppByName(name)
+	appConfig, err := r.store.GetAppByName(name)
 	if err != nil {
 		panic(err)
 	}

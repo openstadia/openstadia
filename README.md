@@ -66,7 +66,8 @@ hub:
   token: "my-awesome-secret"
 
 local:
-  addr: "0.0.0.0:8080"
+  host: "0.0.0.0"
+  port: "9090"
 
 apps:
   - name: "my-awesome-app"

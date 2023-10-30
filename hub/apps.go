@@ -2,8 +2,8 @@ package hub
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/openstadia/openstadia/config"
 	p "github.com/openstadia/openstadia/packet"
+	s "github.com/openstadia/openstadia/store"
 	"log"
 )
 
@@ -11,9 +11,9 @@ type AppsAnswer struct {
 	Apps []string `json:"apps"`
 }
 
-func handleApps(conn *websocket.Conn, header *p.Header, config *config.Openstadia) {
+func handleApps(conn *websocket.Conn, header *p.Header, store *s.Store) {
 	apps := make([]string, 0)
-	for _, app := range config.GetApps() {
+	for _, app := range store.Apps() {
 		apps = append(apps, app.Name)
 	}
 
