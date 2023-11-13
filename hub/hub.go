@@ -25,7 +25,13 @@ func New(store *s.Store, rtc *rtc.Rtc) *Hub {
 }
 
 func (h *Hub) Start(interrupt <-chan os.Signal) {
-	u := url.URL{Scheme: "wss", Host: h.store.Hub().Addr, Path: "/ws/"}
+	u, err := url.Parse(h.store.Hub().Addr)
+	if err != nil {
+		log.Println("can't parse url:", err)
+		return
+	}
+
+	u.Path = "/ws/"
 	log.Printf("connecting to %s", u.String())
 
 	requestHeader := http.Header{}

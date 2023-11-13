@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/getlantern/systray"
 	s "github.com/openstadia/openstadia/store"
+	"github.com/openstadia/openstadia/utils"
 	"github.com/skratchdot/open-golang/open"
-	"os"
 )
 
 func Run(store *s.Store) {
@@ -32,8 +32,8 @@ func onReady(store *s.Store) {
 				port := store.Local().Port
 				open.Run(fmt.Sprintf("http://127.0.0.1:%s", port))
 			case <-mConfig.ClickedCh:
-				path, _ := os.Getwd()
-				open.Run(path)
+				appConfigDir, _ := utils.GetConfigDir()
+				open.Run(appConfigDir)
 			case <-mQuit.ClickedCh:
 				systray.Quit()
 				fmt.Println("Quit now")

@@ -2,8 +2,8 @@
 
 package runtime
 
-import "github.com/openstadia/openstadia/config"
+import s "github.com/openstadia/openstadia/store"
 
-func Run(config *config.Openstadia) {
+func Run(store *s.Store) {
 	select {}
 }

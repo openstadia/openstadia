@@ -61,8 +61,8 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 		panic(err)
 	}
 
-	name := offer.App.Name
-	appConfig, err := r.store.GetAppByName(name)
+	appConfig, err := r.store.GetAppById(offer.AppId)
+
 	if err != nil {
 		panic(err)
 	}

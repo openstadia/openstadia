@@ -4,6 +4,6 @@ import "github.com/pion/webrtc/v3"
 
 type Offer struct {
 	webrtc.SessionDescription
-	Codec Codec
-	App   App
+	AppId int   `json:"app_id"`
+	Codec Codec `json:"codec"`
 }

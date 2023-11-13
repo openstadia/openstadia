@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"github.com/boltdb/bolt"
 	c "github.com/openstadia/openstadia/config"
+	"github.com/openstadia/openstadia/utils"
+	"path/filepath"
 )
 
 const DbFile = "openstadia.db"
 
 const (
-	AppsBucketName  = "Apps"
-	HubBucketName   = "Hub"
-	LocalBucketName = "Local"
+	AppsBucketName = "Apps"
+	MetaBucketName = "Meta"
 )
 
 type Store struct {
@@ -21,10 +22,23 @@ type Store struct {
 }
 
 func CreateStore() (*Store, error) {
-	db, err := bolt.Open(DbFile, 0600, nil)
+	appConfigDir, err := utils.GetConfigDir()
+	if err != nil {
+		panic("can't get config directory")
+	}
+
+	dbPath := filepath.Join(appConfigDir, DbFile)
+
+	db, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	db.Update(func(tx *bolt.Tx) error {
+		tx.CreateBucketIfNotExists([]byte(AppsBucketName))
+		tx.CreateBucketIfNotExists([]byte(MetaBucketName))
+		return nil
+	})
 
 	return &Store{db: db}, nil
 }
@@ -71,10 +85,6 @@ func (s *Store) Apps() []c.DbApp {
 	s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(AppsBucketName))
 
-		if b == nil {
-			return nil
-		}
-
 		cursor := b.Cursor()
 
 		for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
@@ -99,7 +109,7 @@ func (s *Store) AddApp(app *c.BaseApp) error {
 	}
 
 	return s.db.Update(func(tx *bolt.Tx) error {
-		b, _ := tx.CreateBucketIfNotExists([]byte(AppsBucketName))
+		b := tx.Bucket([]byte(AppsBucketName))
 
 		id, _ := b.NextSequence()
 
@@ -121,18 +131,16 @@ func (s *Store) Hub() *c.Hub {
 	var hub *c.Hub
 
 	s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(HubBucketName))
+		b := tx.Bucket([]byte(MetaBucketName))
 
-		if b == nil {
+		value := b.Get([]byte("Hub"))
+		if value == nil {
 			return nil
 		}
 
-		addr := b.Get([]byte("Addr"))
-		token := b.Get([]byte("Token"))
-
-		hub = &c.Hub{
-			Addr:  string(addr),
-			Token: string(token),
+		err := json.Unmarshal(value, &hub)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -143,15 +151,19 @@ func (s *Store) Hub() *c.Hub {
 
 func (s *Store) SetHub(hub *c.Hub) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(MetaBucketName))
+
 		if hub == nil {
-			tx.DeleteBucket([]byte(HubBucketName))
+			b.Delete([]byte("Hub"))
 			return nil
 		}
 
-		b, _ := tx.CreateBucketIfNotExists([]byte(HubBucketName))
+		buf, err := json.Marshal(hub)
+		if err != nil {
+			return err
+		}
 
-		b.Put([]byte("Addr"), []byte(hub.Addr))
-		b.Put([]byte("Token"), []byte(hub.Token))
+		b.Put([]byte("Hub"), buf)
 
 		return nil
 	})
@@ -161,18 +173,16 @@ func (s *Store) Local() *c.Local {
 	var local *c.Local
 
 	s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(LocalBucketName))
+		b := tx.Bucket([]byte(MetaBucketName))
 
-		if b == nil {
+		value := b.Get([]byte("Local"))
+		if value == nil {
 			return nil
 		}
 
-		host := b.Get([]byte("Host"))
-		port := b.Get([]byte("Port"))
-
-		local = &c.Local{
-			Host: string(host),
-			Port: string(port),
+		err := json.Unmarshal(value, &local)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -183,28 +193,32 @@ func (s *Store) Local() *c.Local {
 
 func (s *Store) SetLocal(local *c.Local) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(MetaBucketName))
+
 		if local == nil {
-			tx.DeleteBucket([]byte(LocalBucketName))
+			b.Delete([]byte("Hub"))
 			return nil
 		}
 
-		b, _ := tx.CreateBucketIfNotExists([]byte(LocalBucketName))
+		buf, err := json.Marshal(local)
+		if err != nil {
+			return err
+		}
 
-		b.Put([]byte("Host"), []byte(local.Host))
-		b.Put([]byte("Port"), []byte(local.Port))
+		b.Put([]byte("Local"), buf)
 
 		return nil
 	})
 }
 
-func (s *Store) GetAppByName(name string) (*c.DbApp, error) {
+func (s *Store) GetAppById(id int) (*c.DbApp, error) {
 	for _, app := range s.Apps() {
-		if app.Name == name {
+		if app.Id == id {
 			return &app, nil
 		}
 	}
 
-	return nil, fmt.Errorf("no such application: %s", name)
+	return nil, fmt.Errorf("no such application: %d", id)
 }
 
 func itob(v int) []byte {

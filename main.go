@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	c "github.com/openstadia/openstadia/config"
+	"github.com/openstadia/openstadia/hooks"
 	h "github.com/openstadia/openstadia/hub"
 	g "github.com/openstadia/openstadia/inputs/gamepad"
 	"github.com/openstadia/openstadia/inputs/keyboard"
@@ -23,6 +24,8 @@ import (
 //https://github.com/intel/media-driver
 
 func main() {
+	hooks.Before()
+
 	config, err := c.Load()
 	if err != nil {
 		if errors.Is(err, c.ErrNoConfigFile) {
@@ -71,14 +74,14 @@ func main() {
 	local := l.New(store, rtc)
 	hub := h.New(store, rtc)
 
-	if store.Hub() != nil {
+	if store.Hub().Enabled {
 		interrupt := make(chan os.Signal, 1)
 		signal.Notify(interrupt, os.Interrupt)
 
 		go hub.Start(interrupt)
 	}
 
-	if store.Local() != nil {
+	if store.Local().Enabled {
 		go local.ServeHttp()
 	}
 
