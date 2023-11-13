@@ -196,7 +196,7 @@ func (s *Store) SetLocal(local *c.Local) error {
 		b := tx.Bucket([]byte(MetaBucketName))
 
 		if local == nil {
-			b.Delete([]byte("Hub"))
+			b.Delete([]byte("Local"))
 			return nil
 		}
 

@@ -74,14 +74,14 @@ func main() {
 	local := l.New(store, rtc)
 	hub := h.New(store, rtc)
 
-	if store.Hub().Enabled {
+	if hubObj := store.Hub(); hubObj != nil && hubObj.Enabled {
 		interrupt := make(chan os.Signal, 1)
 		signal.Notify(interrupt, os.Interrupt)
 
 		go hub.Start(interrupt)
 	}
 
-	if store.Local().Enabled {
+	if localObj := store.Local(); localObj != nil && localObj.Enabled {
 		go local.ServeHttp()
 	}
 

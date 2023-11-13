@@ -62,10 +62,12 @@ Example configuration
 
 ```yaml
 hub:
-  addr: "hub.openstadia.com"
+  enabled: true
+  addr: "wss://hub.openstadia.com"
   token: "my-awesome-secret"
 
 local:
+  enabled: true
   host: "0.0.0.0"
   port: "9090"
 
@@ -157,7 +159,7 @@ pacman -S mingw-w64-ucrt-x86_64-libpng
 4. Build the OpenStadia application using the following command:
 
 ```shell
-.\build.ps1
+.\scripts\build-dev.ps1
 ```
 
 ### Launching
@@ -179,6 +181,7 @@ The project contains some experimental features that need to be activated by pas
 | Flag | Description                                                                   |
 |------|-------------------------------------------------------------------------------|
 | d3d  | Enables experimental DXGI OutputDuplication screen capture (only for Windows) |
+| tray | Enables launching application in OS tray                                      |
 
 ### Example
 
