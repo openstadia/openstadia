@@ -1,3 +1,5 @@
+//go:build !device
+
 package application
 
 import "github.com/pion/mediadevices/pkg/driver/screen"

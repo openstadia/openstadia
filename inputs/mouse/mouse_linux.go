@@ -1,3 +1,5 @@
+//go:build !device
+
 package mouse
 
 import (

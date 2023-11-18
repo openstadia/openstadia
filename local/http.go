@@ -10,11 +10,11 @@ import (
 )
 
 type Local struct {
-	store *s.Store
+	store s.Store
 	rtc   *rtc.Rtc
 }
 
-func New(store *s.Store, rtc *rtc.Rtc) *Local {
+func New(store s.Store, rtc *rtc.Rtc) *Local {
 	return &Local{
 		store: store,
 		rtc:   rtc,

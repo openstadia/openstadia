@@ -92,6 +92,8 @@ github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1y
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
 github.com/openstadia/go-uinput v0.0.0-20230921113015-654c0ab8e6c2 h1:mJt40Yj0D+Jf+CopVDflO4uh41VNgqMEjneVRP//DHU=
 github.com/openstadia/go-uinput v0.0.0-20230921113015-654c0ab8e6c2/go.mod h1:HlR2ul1YwdIfpYhMsHdeys5LhAWxgIEmzk9bFL7nI+M=
+github.com/openstadia/go-usb-gadget v0.0.0-20231115171102-aebd56bbb965 h1:bZGtUfkOl0dqvem8ltx9KCYied0gSlRuDhaZDxgppN4=
+github.com/openstadia/go-usb-gadget v0.0.0-20231115171102-aebd56bbb965/go.mod h1:6cAIK2c4O3/yETSrRjmNwsBL3yE4Vcu9M9p/Qwx5+gM=
 github.com/openstadia/go-vigem v0.0.0-20231112104545-cd0c86b3b050 h1:gz6elCqkUpr4JQwnRs5oIwPJyPLnvbrL/tMy8G+pDAg=
 github.com/openstadia/go-vigem v0.0.0-20231112104545-cd0c86b3b050/go.mod h1:Gzd9Xtz6AH44tm5Az1mCGYZCp8VSRIFpKUMY2lBdep8=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c h1:rp5dCmg/yLR3mgFuSOe4oEnDDmGLROTvMragMUXpTQw=

@@ -16,14 +16,14 @@ import (
 )
 
 type Rtc struct {
-	store    *s.Store
+	store    s.Store
 	tracks   []mediadevices.Track
 	mouse    mouse.Mouse
 	keyboard keyboard.Keyboard
 	gamepad  gamepad.Gamepad
 }
 
-func New(store *s.Store, mouse mouse.Mouse, keyboard keyboard.Keyboard, gamepad gamepad.Gamepad) *Rtc {
+func New(store s.Store, mouse mouse.Mouse, keyboard keyboard.Keyboard, gamepad gamepad.Gamepad) *Rtc {
 	return &Rtc{store: store, mouse: mouse, keyboard: keyboard, gamepad: gamepad}
 }
 
@@ -72,7 +72,9 @@ func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
 
 	if application.IsScreen(appConfig) {
 		app = application.NewScreen()
-	} else {
+	} else if application.IsCamera(appConfig) {
+		app = application.NewCamera()
+	} else if application.IsApp(appConfig) {
 		display_ = display.Create(appConfig.Width, appConfig.Height)
 		display_.Start()
 

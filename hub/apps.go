@@ -12,7 +12,7 @@ type AppsAnswer struct {
 	Apps []config.DbApp `json:"apps"`
 }
 
-func handleApps(conn *websocket.Conn, header *p.Header, store *s.Store) {
+func handleApps(conn *websocket.Conn, header *p.Header, store s.Store) {
 	apps := store.Apps()
 
 	packetRes := p.Packet[AppsAnswer]{

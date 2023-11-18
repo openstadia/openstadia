@@ -3,20 +3,18 @@ package application
 import (
 	"github.com/pion/mediadevices"
 	"github.com/pion/mediadevices/pkg/driver/camera"
-	"github.com/pion/mediadevices/pkg/driver/microphone"
 	"github.com/pion/mediadevices/pkg/frame"
 	"github.com/pion/mediadevices/pkg/prop"
 )
 
 func CameraInitialize() {
 	camera.Initialize()
-	microphone.Initialize()
 }
 
 type cameraApp struct {
 }
 
-func CreateCamera() Application {
+func NewCamera() Application {
 	return &cameraApp{}
 }
 
@@ -34,8 +32,6 @@ func (c *cameraApp) GetMedia(codecSelector *mediadevices.CodecSelector) (mediade
 			c.FrameFormat = prop.FrameFormat(frame.FormatMJPEG)
 			c.Width = prop.Int(640)
 			c.Height = prop.Int(480)
-		},
-		Audio: func(c *mediadevices.MediaTrackConstraints) {
 		},
 		Codec: codecSelector,
 	})

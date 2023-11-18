@@ -13,11 +13,11 @@ import (
 )
 
 type Hub struct {
-	store *s.Store
+	store s.Store
 	rtc   *rtc.Rtc
 }
 
-func New(store *s.Store, rtc *rtc.Rtc) *Hub {
+func New(store s.Store, rtc *rtc.Rtc) *Hub {
 	return &Hub{
 		store: store,
 		rtc:   rtc,

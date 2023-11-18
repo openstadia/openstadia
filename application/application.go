@@ -14,3 +14,11 @@ type Application interface {
 func IsScreen(app *config.DbApp) bool {
 	return app.Name == "screen"
 }
+
+func IsCamera(app *config.DbApp) bool {
+	return app.Name == "camera"
+}
+
+func IsApp(app *config.DbApp) bool {
+	return true
+}

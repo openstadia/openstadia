@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	c "github.com/openstadia/openstadia/config"
 	"github.com/openstadia/openstadia/hooks"
@@ -18,12 +19,10 @@ import (
 	"os/signal"
 )
 
-//Hook
-//sudo apt install xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev libxkbcommon-dev
-
-//https://github.com/intel/media-driver
-
 func main() {
+	useFile := flag.Bool("file", false, "use config from file")
+	flag.Parse()
+
 	hooks.Before()
 
 	config, err := c.Load()
@@ -36,11 +35,19 @@ func main() {
 	}
 	fmt.Printf("Config %#v\n", config)
 
-	store, err := s.CreateStore()
-	if err != nil {
-		log.Fatal(err)
+	var store s.Store
+	if *useFile {
+		configStore := s.CreateConfigStore(config)
+		store = configStore
+	} else {
+		dbStore, err := s.CreateDbStore()
+		if err != nil {
+			log.Fatal(err)
+		}
+		dbStore.SetConfig(config)
+		store = dbStore
 	}
-	store.SetConfig(config)
+
 	fmt.Printf("Store %#v\n", store.Config())
 
 	remoteGamepad := true

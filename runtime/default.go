@@ -4,6 +4,6 @@ package runtime
 
 import s "github.com/openstadia/openstadia/store"
 
-func Run(store *s.Store) {
+func Run(store s.Store) {
 	select {}
 }

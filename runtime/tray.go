@@ -10,13 +10,13 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-func Run(store *s.Store) {
+func Run(store s.Store) {
 	systray.Run(func() {
 		onReady(store)
 	}, nil)
 }
 
-func onReady(store *s.Store) {
+func onReady(store s.Store) {
 	go func() {
 		systray.SetTemplateIcon(Icon, Icon)
 		systray.SetTitle("OpenStadia")

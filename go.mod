@@ -11,6 +11,7 @@ require (
 	github.com/kirides/go-d3d v1.0.0
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e
 	github.com/openstadia/go-uinput v0.0.0-20230921113015-654c0ab8e6c2
+	github.com/openstadia/go-usb-gadget v0.0.0-20231115171102-aebd56bbb965
 	github.com/openstadia/go-vigem v0.0.0-20231112104545-cd0c86b3b050
 	github.com/pion/mediadevices v0.6.0
 	github.com/pion/webrtc/v3 v3.2.22
