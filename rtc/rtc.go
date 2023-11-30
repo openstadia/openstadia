@@ -32,6 +32,14 @@ func (r *Rtc) IsBusy() bool {
 }
 
 func (r *Rtc) Offer(offer o.Offer) *webrtc.SessionDescription {
+	if offer.AppId == -1 {
+		return OfferShell(offer)
+	}
+
+	if offer.AppId == -2 {
+		return OfferFs(offer)
+	}
+
 	webrtcConfig := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{

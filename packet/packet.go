@@ -6,13 +6,6 @@ import (
 	"errors"
 )
 
-type Type string
-
-const (
-	TypeEvent Type = "EVENT"
-	TypeAck   Type = "ACK"
-)
-
 var Separator = []byte{'|'}
 
 type Packet[T any] struct {
@@ -52,4 +45,16 @@ func (p *Packet[T]) Encode() ([]byte, error) {
 	}
 
 	return bytes.Join([][]byte{header, payload}, Separator), nil
+}
+
+func MakeAck[T any, R any](pack *Packet[T], payload R) *Packet[R] {
+	ack := Packet[R]{
+		Header: Header{
+			Type: TypeAck,
+			Id:   pack.Header.Id,
+		},
+		Payload: payload,
+	}
+
+	return &ack
 }

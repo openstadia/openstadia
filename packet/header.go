@@ -6,6 +6,13 @@ import (
 	"errors"
 )
 
+type Type string
+
+const (
+	TypeEvent Type = "EVENT"
+	TypeAck   Type = "ACK"
+)
+
 type Header struct {
 	Type Type   `json:"type"`
 	Id   *int   `json:"id"`
