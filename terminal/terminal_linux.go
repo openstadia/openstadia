@@ -15,14 +15,23 @@ const (
 )
 
 type Terminal struct {
+	f   *os.File
+	tty *os.File
 }
 
-func New(width int, height int) *Terminal {
+func New(width int, height int) (*Terminal, error) {
 	f, tty, err := pty.Open()
 	if err != nil {
 		log.Fatalf("could not start pty (%s)", err)
 	}
 
+	return &Terminal{
+		f:   f,
+		tty: tty,
+	}, nil
+}
+
+func (t *Terminal) Start(channel io.ReadWriteCloser) {
 	var shell string
 	shell = os.Getenv("SHELL")
 	if shell == "" {
@@ -31,32 +40,34 @@ func New(width int, height int) *Terminal {
 
 	cmd := exec.Command(shell)
 	cmd.Env = []string{"TERM=xterm"}
-	err = ptyRun(cmd, tty)
+	err := ptyRun(cmd, t.tty)
 	if err != nil {
 		log.Printf("%s", err)
 	}
 
-	w := newDcw(d)
-
 	var once sync.Once
 	close := func() {
-		d.Close()
+		channel.Close()
 		log.Printf("session closed")
 	}
 
 	go func() {
-		io.Copy(w, f)
+		io.Copy(channel, t.f)
 		once.Do(close)
 	}()
 
 	go func() {
-		io.Copy(f, w)
+		io.Copy(t.f, channel)
 		once.Do(close)
 	}()
+
+}
+
+func (t *Terminal) Close() error {
+	return t.f.Close()
 }
 
 func ptyRun(c *exec.Cmd, tty *os.File) (err error) {
-	defer tty.Close()
 	c.Stdout = tty
 	c.Stdin = tty
 	c.Stderr = tty

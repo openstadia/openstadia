@@ -28,18 +28,20 @@ OpenStadia currently supports the following operating system:
 
 ## Support Table
 
-|                  | Linux           | Windows         | macOS           | External Device |
-|------------------|-----------------|-----------------|-----------------|-----------------|
-| Video Capture    | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
-| Audio Capture    | :yellow_circle: | :yellow_circle: | :purple_circle: | :yellow_circle: |
-| Mouse Capture    | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
-| Keyboard Capture | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
-| Gamepad Capture  | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
-| Virtual Display  | :green_circle:  | :purple_circle: | :red_circle:    | :black_circle:  |
-| Virtual Drive    | :purple_circle: | :purple_circle: | :purple_circle: | :purple_circle: |
-| Container        | :purple_circle: | :black_circle:  | :red_circle:    | :black_circle:  |
-| HID Capture      | :purple_circle: | :purple_circle: | :red_circle:    | :purple_circle: |
-| TCP Tunneling    | :purple_circle: | :purple_circle: | :red_circle:    | :black_circle:  |
+|                      | Linux           | Windows         | macOS           | External Device |
+|----------------------|-----------------|-----------------|-----------------|-----------------|
+| Video Capture        | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Audio Capture        | :yellow_circle: | :yellow_circle: | :purple_circle: | :yellow_circle: |
+| Mouse Capture        | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Keyboard Capture     | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Gamepad Capture      | :green_circle:  | :green_circle:  | :purple_circle: | :yellow_circle: |
+| Virtual Display      | :green_circle:  | :purple_circle: | :red_circle:    | :black_circle:  |
+| Virtual Drive        | :purple_circle: | :purple_circle: | :purple_circle: | :purple_circle: |
+| File System Explorer | :green_circle:  | :green_circle:  | :purple_circle: | :black_circle:  |
+| Remote Terminal      | :green_circle:  | :green_circle:  | :purple_circle: | :black_circle:  |
+| Container            | :purple_circle: | :black_circle:  | :red_circle:    | :black_circle:  |
+| HID Capture          | :purple_circle: | :purple_circle: | :red_circle:    | :purple_circle: |
+| TCP Tunneling        | :purple_circle: | :purple_circle: | :red_circle:    | :black_circle:  |
 
 - :green_circle: - supported
 - :purple_circle: - support is planned

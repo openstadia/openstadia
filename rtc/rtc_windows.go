@@ -4,5 +4,4 @@ import "github.com/openstadia/openstadia/application"
 
 func init() {
 	application.ScreenInitialize()
-	application.CameraInitialize()
 }
